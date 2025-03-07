@@ -224,6 +224,10 @@ This modular design allows you to only import what you need, keeping dependencie
   - Core package dependencies
   - AI provider specific dependencies (based on your implementation)
 
+## Inspired by
+
+- http://github.com/olebedev/when
+
 ## License
 
 See the LICENSE file for details.
