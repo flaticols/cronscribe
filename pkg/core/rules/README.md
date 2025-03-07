@@ -24,7 +24,7 @@ CronScribe supports extended cron syntax, including:
 
 ## Rule File Structure
 
-Each language has its own YAML file (e.g., `en.yaml`, `ru.yaml`, `nl.yaml`) with the following structure:
+Each language has its own YAML file (e.g., `en.yaml`, `nl.yaml`, `ru.yaml`) with the following structure:
 
 ```yaml
 language: en  # Language code (ISO 639-1)
