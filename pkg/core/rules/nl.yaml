@@ -13,7 +13,142 @@ rules:
       - condition: "ordinal == 'laatste'"
         format: "0 0 * * %weekdayL"
 
-  # Остальные правила по аналогии с английскими, но с нидерландскими паттернами
+  - name: weekly_day_at_time
+    pattern: '(?i)(?:elke|iedere)\s+(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)(?:\s+om\s+(\d+)(?::(\d+))?\s*(vm|nm)?)?'
+    variables:
+      weekday: 1
+      hour: 2
+      minute: 3
+      ampm: 4
+    dictionaries:
+      weekday: weekdays
+      ampm: time_ampm
+    format: "0 %minute %hour * * %weekday"
+    default_values:
+      minute: "0"
+    transformations:
+      hour:
+        - condition: "ampm == 'nm' && hour < 12"
+          operation: "hour + 12"
+        - condition: "ampm == 'vm' && hour == 12"
+          operation: "0"
+
+  - name: daily_at_time
+    pattern: '(?i)(?:elke|iedere)\s+dag\s+om\s+(\d+)(?::(\d+))?\s*(vm|nm)?'
+    variables:
+      hour: 1
+      minute: 2
+      ampm: 3
+    dictionaries:
+      ampm: time_ampm
+    format: "%minute %hour * * *"
+    default_values:
+      minute: "0"
+    transformations:
+      hour:
+        - condition: "ampm == 'nm' && hour < 12"
+          operation: "hour + 12"
+        - condition: "ampm == 'vm' && hour == 12"
+          operation: "0"
+
+  - name: hourly
+    pattern: '(?i)(?:elk|ieder)\s+uur'
+    format: "0 * * * *"
+
+  - name: every_n_minutes
+    pattern: '(?i)(?:elke|iedere)\s+(\d+)\s+min(?:u(?:ut|ten))?'
+    variables:
+      minutes: 1
+    format: "*/%minutes * * * *"
+
+  - name: every_n_hours
+    pattern: '(?i)(?:elke|iedere)\s+(\d+)\s+(?:uur|uren)'
+    variables:
+      hours: 1
+    format: "0 */%hours * * *"
+
+  - name: specific_day_of_month
+    pattern: '(?i)(?:elke|iedere)\s+(\d+)(?:e|de|ste)?\s+(?:dag\s+)?van\s+de\s+maand(?:\s+om\s+(\d+)(?::(\d+))?\s*(vm|nm)?)?'
+    variables:
+      day: 1
+      hour: 2
+      minute: 3
+      ampm: 4
+    dictionaries:
+      ampm: time_ampm
+    format: "%minute %hour %day * *"
+    default_values:
+      minute: "0"
+      hour: "0"
+    transformations:
+      hour:
+        - condition: "ampm == 'nm' && hour < 12"
+          operation: "hour + 12"
+        - condition: "ampm == 'vm' && hour == 12"
+          operation: "0"
+
+  - name: specific_month_day
+    pattern: '(?i)(?:elke|iedere)\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s+(\d+)(?:e|de|ste)?(?:\s+om\s+(\d+)(?::(\d+))?\s*(vm|nm)?)?'
+    variables:
+      month: 1
+      day: 2
+      hour: 3
+      minute: 4
+      ampm: 5
+    dictionaries:
+      month: months
+      ampm: time_ampm
+    format: "%minute %hour %day %month *"
+    default_values:
+      minute: "0"
+      hour: "0"
+    transformations:
+      hour:
+        - condition: "ampm == 'nm' && hour < 12"
+          operation: "hour + 12"
+        - condition: "ampm == 'vm' && hour == 12"
+          operation: "0"
+
+  - name: last_day_of_month
+    pattern: '(?i)(?:elke|iedere|de)\s+laatste\s+dag\s+van\s+de\s+maand(?:\s+om\s+(\d+)(?::(\d+))?\s*(vm|nm)?)?'
+    variables:
+      hour: 1
+      minute: 2
+      ampm: 3
+    dictionaries:
+      ampm: time_ampm
+    format: "%minute %hour L * *"
+    default_values:
+      minute: "0"
+      hour: "0"
+    transformations:
+      hour:
+        - condition: "ampm == 'nm' && hour < 12"
+          operation: "hour + 12"
+        - condition: "ampm == 'vm' && hour == 12"
+          operation: "0"
+
+  - name: weekday_nearest_day
+    pattern: '(?i)(?:elke|iedere|de)\s+(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\s+(?:het\s+)?dichtstbij\s+(?:de\s+)?(\d+)(?:e|de|ste)?(?:\s+om\s+(\d+)(?::(\d+))?\s*(vm|nm)?)?'
+    variables:
+      weekday: 1
+      day: 2
+      hour: 3
+      minute: 4
+      ampm: 5
+    dictionaries:
+      weekday: weekdays
+      ampm: time_ampm
+    format: "%minute %hour %dayW %month %weekday"
+    default_values:
+      minute: "0"
+      hour: "0"
+    transformations:
+      hour:
+        - condition: "ampm == 'nm' && hour < 12"
+          operation: "hour + 12"
+        - condition: "ampm == 'vm' && hour == 12"
+          operation: "0"
 
 dictionaries:
   weekdays:
