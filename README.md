@@ -65,6 +65,63 @@ func main() {
 
 This library provides a flexible AIProvider interface that you can implement with any LLM provider.
 
+#### Built-in LangChain Provider
+
+CronScribe includes a built-in LangChain provider for easy integration with various LLMs:
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "log"
+
+    "github.com/flaticols/cronscribe"
+    "github.com/tmc/langchaingo/llms/openai"
+)
+
+func main() {
+    // Make sure to set OPENAI_API_KEY in your environment
+    if os.Getenv("OPENAI_API_KEY") == "" {
+        log.Fatal("OPENAI_API_KEY environment variable must be set")
+    }
+
+    // Create a LangChain provider with default settings (GPT-3.5-turbo)
+    provider, err := cronscribe.NewLangChainProvider()
+    if err != nil {
+        log.Fatalf("Failed to create LangChain provider: %v", err)
+    }
+
+    // Optionally, specify a different model
+    // provider, err := cronscribe.NewLangChainProvider(
+    //     cronscribe.WithLangChainModel(openai.GPT4),
+    // )
+
+    // Create a brave mapper with LangChain provider
+    mapper, err := cronscribe.NewBraveHumanCronMapper(
+        "./rules",
+        provider,
+        cronscribe.WithAIFirst(true), // Try AI first, fallback to local rules
+    )
+    if err != nil {
+        log.Fatalf("Failed to create mapper: %v", err)
+    }
+
+    cronExpr, err := mapper.ToCron("run every Monday at 9:15 AM")
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+
+    fmt.Println("Cron expression:", cronExpr)
+}
+```
+
+#### Custom AI Provider Implementation
+
+You can also implement your own AI provider:
+
 ```go
 package main
 
@@ -133,24 +190,6 @@ func main() {
 
     // Try to convert using local rules first, then AI if needed
     cronExpr, err := mapper.ToCron("run every Monday at 9:15 AM")
-    if err != nil {
-        fmt.Println("Error:", err)
-        return
-    }
-
-    fmt.Println("Cron expression:", cronExpr)
-
-    // You can configure it to try AI first with the WithAIFirst option
-    mapperAIFirst, err := cronscribe.NewBraveHumanCronMapper(
-        "./rules",
-        openaiProvider,
-        cronscribe.WithAIFirst(true), // Try AI first, fallback to local rules
-    )
-    if err != nil {
-        panic(err)
-    }
-
-    cronExpr, err = mapperAIFirst.ToCron("first Monday of every month at 3 PM")
     if err != nil {
         fmt.Println("Error:", err)
         return
