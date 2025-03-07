@@ -34,7 +34,156 @@ rules:
         - condition: "weekday == 'субботу'"
           operation: "'суббота'"
 
-  # Остальные правила по аналогии с английскими, но с русскими паттернами
+  - name: weekly_day_at_time
+    pattern: '(?i)кажд(?:ый|ую)\s+(понедельник|вторник|сред[ау]|четверг|пятниц[ау]|суббот[ау]|воскресенье)(?:\s+в\s+(\d+)(?::(\d+))?\s*(?:час(?:ов|а)?)?(?:\s+(утра|дня|вечера|ночи))?)?'
+    variables:
+      weekday: 1
+      hour: 2
+      minute: 3
+      ampm: 4
+    dictionaries:
+      weekday: weekdays
+      ampm: time_ampm
+    format: "0 %minute %hour * * %weekday"
+    default_values:
+      minute: "0"
+    transformations:
+      weekday:
+        - condition: "weekday == 'среду'"
+          operation: "'среда'"
+        - condition: "weekday == 'пятницу'"
+          operation: "'пятница'"
+        - condition: "weekday == 'субботу'"
+          operation: "'суббота'"
+      hour:
+        - condition: "(ampm == 'дня' || ampm == 'вечера') && hour < 12"
+          operation: "hour + 12"
+        - condition: "(ampm == 'утра' || ampm == 'ночи') && hour == 12"
+          operation: "0"
+
+  - name: daily_at_time
+    pattern: '(?i)кажд(?:ый|ую)\s+день\s+в\s+(\d+)(?::(\d+))?\s*(?:час(?:ов|а)?)?(?:\s+(утра|дня|вечера|ночи))?'
+    variables:
+      hour: 1
+      minute: 2
+      ampm: 3
+    dictionaries:
+      ampm: time_ampm
+    format: "%minute %hour * * *"
+    default_values:
+      minute: "0"
+    transformations:
+      hour:
+        - condition: "(ampm == 'дня' || ampm == 'вечера') && hour < 12"
+          operation: "hour + 12"
+        - condition: "(ampm == 'утра' || ampm == 'ночи') && hour == 12"
+          operation: "0"
+
+  - name: hourly
+    pattern: '(?i)кажд(?:ый|ую)\s+час'
+    format: "0 * * * *"
+
+  - name: every_n_minutes
+    pattern: '(?i)кажд(?:ые|ую)\s+(\d+)\s+минут(?:ы|у)?'
+    variables:
+      minutes: 1
+    format: "*/%minutes * * * *"
+
+  - name: every_n_hours
+    pattern: '(?i)кажд(?:ые|ую)\s+(\d+)\s+час(?:а|ов)?'
+    variables:
+      hours: 1
+    format: "0 */%hours * * *"
+
+  - name: specific_day_of_month
+    pattern: '(?i)кажд(?:ое|ого)\s+(\d+)(?:-е|-го)?\s+(?:число|дня)?\s+(?:месяца|в месяце)?(?:\s+в\s+(\d+)(?::(\d+))?\s*(?:час(?:ов|а)?)?(?:\s+(утра|дня|вечера|ночи))?)?'
+    variables:
+      day: 1
+      hour: 2
+      minute: 3
+      ampm: 4
+    dictionaries:
+      ampm: time_ampm
+    format: "%minute %hour %day * *"
+    default_values:
+      minute: "0"
+      hour: "0"
+    transformations:
+      hour:
+        - condition: "(ampm == 'дня' || ampm == 'вечера') && hour < 12"
+          operation: "hour + 12"
+        - condition: "(ampm == 'утра' || ampm == 'ночи') && hour == 12"
+          operation: "0"
+
+  - name: specific_month_day
+    pattern: '(?i)кажд(?:ого|ое)\s+(\d+)(?:-е|-го)?\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)(?:\s+в\s+(\d+)(?::(\d+))?\s*(?:час(?:ов|а)?)?(?:\s+(утра|дня|вечера|ночи))?)?'
+    variables:
+      day: 1
+      month: 2
+      hour: 3
+      minute: 4
+      ampm: 5
+    dictionaries:
+      month: months
+      ampm: time_ampm
+    format: "%minute %hour %day %month *"
+    default_values:
+      minute: "0"
+      hour: "0"
+    transformations:
+      hour:
+        - condition: "(ampm == 'дня' || ampm == 'вечера') && hour < 12"
+          operation: "hour + 12"
+        - condition: "(ampm == 'утра' || ampm == 'ночи') && hour == 12"
+          operation: "0"
+
+  - name: last_day_of_month
+    pattern: '(?i)(?:каждый|в)\s+последни(?:й|е)\s+день\s+(?:месяца|в месяце)(?:\s+в\s+(\d+)(?::(\d+))?\s*(?:час(?:ов|а)?)?(?:\s+(утра|дня|вечера|ночи))?)?'
+    variables:
+      hour: 1
+      minute: 2
+      ampm: 3
+    dictionaries:
+      ampm: time_ampm
+    format: "%minute %hour L * *"
+    default_values:
+      minute: "0"
+      hour: "0"
+    transformations:
+      hour:
+        - condition: "(ampm == 'дня' || ampm == 'вечера') && hour < 12"
+          operation: "hour + 12"
+        - condition: "(ampm == 'утра' || ampm == 'ночи') && hour == 12"
+          operation: "0"
+
+  - name: weekday_nearest_day
+    pattern: '(?i)(?:каждый|в)\s+(понедельник|вторник|сред[ау]|четверг|пятниц[ау]|суббот[ау]|воскресенье)\s+ближайший\s+к\s+(\d+)(?:-му|-ому)?(?:\s+числу)?(?:\s+в\s+(\d+)(?::(\d+))?\s*(?:час(?:ов|а)?)?(?:\s+(утра|дня|вечера|ночи))?)?'
+    variables:
+      weekday: 1
+      day: 2
+      hour: 3
+      minute: 4
+      ampm: 5
+    dictionaries:
+      weekday: weekdays
+      ampm: time_ampm
+    format: "%minute %hour %dayW %month %weekday"
+    default_values:
+      minute: "0"
+      hour: "0"
+    transformations:
+      weekday:
+        - condition: "weekday == 'среду'"
+          operation: "'среда'"
+        - condition: "weekday == 'пятницу'"
+          operation: "'пятница'"
+        - condition: "weekday == 'субботу'"
+          operation: "'суббота'"
+      hour:
+        - condition: "(ampm == 'дня' || ampm == 'вечера') && hour < 12"
+          operation: "hour + 12"
+        - condition: "(ampm == 'утра' || ampm == 'ночи') && hour == 12"
+          operation: "0"
 
 dictionaries:
   weekdays:
@@ -61,15 +210,15 @@ dictionaries:
     ночи: "am"
 
   months:
-    январь: "1"
-    февраль: "2"
-    март: "3"
-    апрель: "4"
-    май: "5"
-    июнь: "6"
-    июль: "7"
-    август: "8"
-    сентябрь: "9"
-    октябрь: "10"
-    ноябрь: "11"
-    декабрь: "12"
+    января: "1"
+    февраля: "2"
+    марта: "3"
+    апреля: "4"
+    мая: "5"
+    июня: "6"
+    июля: "7"
+    августа: "8"
+    сентября: "9"
+    октября: "10"
+    ноября: "11"
+    декабря: "12"
