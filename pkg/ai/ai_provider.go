@@ -1,4 +1,4 @@
-package cronscribe
+package ai
 
 import (
 	"context"
