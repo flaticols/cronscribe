@@ -1,0 +1,75 @@
+language: ru
+rules:
+  - name: nth_weekday_of_month
+    pattern: '(?i)кажд(?:ый|ая|ое)\s+(перв(?:ый|ая|ое)|втор(?:ой|ая|ое)|трет(?:ий|ья|ье)|четверт(?:ый|ая|ое)|пят(?:ый|ая|ое)|последн(?:ий|яя|ее))\s+(понедельник|вторник|сред[ау]|четверг|пятниц[ау]|суббот[ау]|воскресенье)(?:\s+(?:месяца|в месяце))?'
+    variables:
+      ordinal: 1
+      weekday: 2
+    dictionaries:
+      ordinal: ordinals
+      weekday: weekdays
+    format: "0 0 * * %weekday#%ordinal"
+    special_cases:
+      - condition: "ordinal == 'последний'"
+        format: "0 0 * * %weekdayL"
+    transformations:
+      ordinal:
+        - condition: "ordinal == 'первая' || ordinal == 'первое'"
+          operation: "'первый'"
+        - condition: "ordinal == 'вторая' || ordinal == 'второе'"
+          operation: "'второй'"
+        - condition: "ordinal == 'третья' || ordinal == 'третье'"
+          operation: "'третий'"
+        - condition: "ordinal == 'четвертая' || ordinal == 'четвертое'"
+          operation: "'четвертый'"
+        - condition: "ordinal == 'пятая' || ordinal == 'пятое'"
+          operation: "'пятый'"
+        - condition: "ordinal == 'последняя' || ordinal == 'последнее'"
+          operation: "'последний'"
+      weekday:
+        - condition: "weekday == 'среду'"
+          operation: "'среда'"
+        - condition: "weekday == 'пятницу'"
+          operation: "'пятница'"
+        - condition: "weekday == 'субботу'"
+          operation: "'суббота'"
+
+  # Остальные правила по аналогии с английскими, но с русскими паттернами
+
+dictionaries:
+  weekdays:
+    воскресенье: "0"
+    понедельник: "1"
+    вторник: "2"
+    среда: "3"
+    четверг: "4"
+    пятница: "5"
+    суббота: "6"
+
+  ordinals:
+    первый: "1"
+    второй: "2"
+    третий: "3"
+    четвертый: "4"
+    пятый: "5"
+    последний: "L"
+
+  time_ampm:
+    утра: "am"
+    дня: "pm"
+    вечера: "pm"
+    ночи: "am"
+
+  months:
+    январь: "1"
+    февраль: "2"
+    март: "3"
+    апрель: "4"
+    май: "5"
+    июнь: "6"
+    июль: "7"
+    август: "8"
+    сентябрь: "9"
+    октябрь: "10"
+    ноябрь: "11"
+    декабрь: "12"
