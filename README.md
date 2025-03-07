@@ -8,7 +8,7 @@ Convert human-readable text into a cron expression. It supports Dutch, English, 
 ## Features
 
 - Convert natural language schedule descriptions to cron expressions
-- Support for multiple languages (English, Russian, Dutch)
+- Support for multiple languages (Dutch, English, Russian)
 - Extensible rule-based system with YAML configuration
 - Optional AI-powered mode with pluggable AI provider interface
 - Modular design: use only what you need
