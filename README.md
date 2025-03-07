@@ -56,7 +56,7 @@ func main() {
 
     fmt.Println("Cron expression:", cronExpr) // Output: 0 12 * * *
 
-    // Use a specific language
+    // Use a specific language (Russian)
     err = cs.SetLanguage("ru")
     if err != nil {
         fmt.Println("Error:", err)
@@ -64,6 +64,21 @@ func main() {
     }
 
     cronExpr, err = cs.Convert("каждый день в полдень")
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+
+    fmt.Println("Cron expression:", cronExpr) // Output: 0 12 * * *
+    
+    // Use Dutch language
+    err = cs.SetLanguage("nl")
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+
+    cronExpr, err = cs.Convert("elke dag om 12 uur 's middags")
     if err != nil {
         fmt.Println("Error:", err)
         return
