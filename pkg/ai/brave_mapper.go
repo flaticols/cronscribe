@@ -1,9 +1,11 @@
-package cronscribe
+package ai
 
 import (
 	"context"
 	"fmt"
 	"strings"
+
+	"github.com/flaticols/cronscribe/pkg/core"
 )
 
 // BraveOption represents a functional option for configuring BraveHumanCronMapper
@@ -23,9 +25,9 @@ func WithAIProvider(provider AIProvider) BraveOption {
 	}
 }
 
-// BraveHumanCronMapper extends HumanCronMapper with AI API capabilities
+// BraveHumanCronMapper extends core.CronScribe with AI API capabilities
 type BraveHumanCronMapper struct {
-	*HumanCronMapper
+	coreMapper *core.CronScribe
 	aiProvider AIProvider
 	useAIFirst bool
 }
@@ -33,7 +35,7 @@ type BraveHumanCronMapper struct {
 // NewBraveHumanCronMapper creates a new brave mapper that can use both local rules and AI
 func NewBraveHumanCronMapper(rulesDir string, provider AIProvider, options ...BraveOption) (*BraveHumanCronMapper, error) {
 	// Create the base mapper using local rules
-	baseMapper, err := NewHumanCronMapper(rulesDir)
+	coreMapper, err := core.New(rulesDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create base mapper: %w", err)
 	}
@@ -44,9 +46,9 @@ func NewBraveHumanCronMapper(rulesDir string, provider AIProvider, options ...Br
 	}
 
 	mapper := &BraveHumanCronMapper{
-		HumanCronMapper: baseMapper,
-		aiProvider:      provider,
-		useAIFirst:      false, // Default to using local rules first
+		coreMapper: coreMapper,
+		aiProvider: provider,
+		useAIFirst: false, // Default to using local rules first
 	}
 
 	// Apply all options
@@ -71,7 +73,7 @@ func (m *BraveHumanCronMapper) ToCron(expression string) (string, error) {
 	}
 
 	// Try local rules
-	cronExpr, err := m.HumanCronMapper.ToCron(expression)
+	cronExpr, err := m.coreMapper.Convert(expression)
 	if err == nil {
 		return cronExpr, nil
 	}
@@ -87,6 +89,34 @@ func (m *BraveHumanCronMapper) ToCron(expression string) (string, error) {
 	}
 
 	return "", err
+}
+
+// SetLanguage sets the language for the underlying mapper
+func (m *BraveHumanCronMapper) SetLanguage(lang string) error {
+	return m.coreMapper.SetLanguage(lang)
+}
+
+// GetSupportedLanguages returns the list of supported languages
+func (m *BraveHumanCronMapper) GetSupportedLanguages() []string {
+	return m.coreMapper.GetSupportedLanguages()
+}
+
+// AutoDetect tries to automatically detect the language and convert the expression
+func (m *BraveHumanCronMapper) AutoDetect(expression string) (string, error) {
+	// Try with local rules first
+	cronExpr, err := m.coreMapper.AutoDetect(expression)
+	if err == nil {
+		return cronExpr, nil
+	}
+
+	// Fall back to AI
+	ctx := context.Background()
+	cronExpr, err = m.aiProvider.GenerateCron(ctx, expression)
+	if err == nil && isValidCronExpression(cronExpr) {
+		return cronExpr, nil
+	}
+
+	return "", fmt.Errorf("unable to convert expression with local rules or AI: %s", expression)
 }
 
 // isValidCronExpression performs basic validation on a cron expression

@@ -1,17 +1,17 @@
-package cronscribe
+package core
 
 import (
 	"fmt"
 	"strings"
 )
 
-// HumanCronMapper преобразует человекочитаемые выражения планирования в cron-формат
+// HumanCronMapper converts human-readable scheduling expressions to cron format
 type HumanCronMapper struct {
 	allRules     map[string]*Rules
 	currentRules *Rules
 }
 
-// NewHumanCronMapper создает новый экземпляр маппера
+// NewHumanCronMapper creates a new mapper instance
 func NewHumanCronMapper(rulesDir string) (*HumanCronMapper, error) {
 	allRules, err := LoadAllRules(rulesDir)
 	if err != nil {
@@ -22,11 +22,11 @@ func NewHumanCronMapper(rulesDir string) (*HumanCronMapper, error) {
 		allRules: allRules,
 	}
 
-	// По умолчанию используем английские правила, если они есть
+	// By default, use English rules if available
 	if rules, ok := allRules["en"]; ok {
 		mapper.currentRules = rules
 	} else {
-		// Иначе используем первые доступные правила
+		// Otherwise use the first available rules
 		for _, rules := range allRules {
 			mapper.currentRules = rules
 			break
@@ -36,41 +36,41 @@ func NewHumanCronMapper(rulesDir string) (*HumanCronMapper, error) {
 	return mapper, nil
 }
 
-// SetLanguage устанавливает язык для маппера
+// SetLanguage sets the language for the mapper
 func (m *HumanCronMapper) SetLanguage(lang string) error {
 	rules, ok := m.allRules[lang]
 	if !ok {
-		return fmt.Errorf("неподдерживаемый язык: %s", lang)
+		return fmt.Errorf("unsupported language: %s", lang)
 	}
 
 	m.currentRules = rules
 	return nil
 }
 
-// ToCron преобразует человекочитаемое выражение в cron-формат
+// ToCron converts a human-readable expression to cron format
 func (m *HumanCronMapper) ToCron(expression string) (string, error) {
 	if m.currentRules == nil {
-		return "", fmt.Errorf("правила не загружены")
+		return "", fmt.Errorf("rules not loaded")
 	}
 
-	// Приводим выражение к нижнему регистру для унификации
+	// Convert the expression to lowercase for standardization
 	expr := strings.ToLower(strings.TrimSpace(expression))
 
-	// Проходим по всем правилам и пытаемся найти соответствие
+	// Go through all rules and try to find a match
 	for _, rule := range m.currentRules.Rules {
 		if match := rule.Match(expr); match != nil {
 			return TranslateRule(&rule, match, m.currentRules.Dictionaries)
 		}
 	}
 
-	return "", fmt.Errorf("неподдерживаемый формат выражения: %s", expression)
+	return "", fmt.Errorf("unsupported expression format: %s", expression)
 }
 
-// AutoDetectAndConvert пытается автоматически определить язык и преобразовать выражение
+// AutoDetectAndConvert tries to automatically detect the language and convert the expression
 func (m *HumanCronMapper) AutoDetectAndConvert(expression string) (string, error) {
 	expr := strings.ToLower(strings.TrimSpace(expression))
 
-	// Проходим по всем языкам
+	// Go through all languages
 	for _, rules := range m.allRules {
 		for _, rule := range rules.Rules {
 			if match := rule.Match(expr); match != nil {
@@ -83,10 +83,10 @@ func (m *HumanCronMapper) AutoDetectAndConvert(expression string) (string, error
 		}
 	}
 
-	return "", fmt.Errorf("неподдерживаемый формат выражения: %s", expression)
+	return "", fmt.Errorf("unsupported expression format: %s", expression)
 }
 
-// GetSupportedLanguages возвращает список поддерживаемых языков
+// GetSupportedLanguages returns a list of supported languages
 func (m *HumanCronMapper) GetSupportedLanguages() []string {
 	languages := make([]string, 0, len(m.allRules))
 	for lang := range m.allRules {
@@ -95,7 +95,7 @@ func (m *HumanCronMapper) GetSupportedLanguages() []string {
 	return languages
 }
 
-// AddRulesFromFile добавляет правила из файла
+// AddRulesFromFile adds rules from a file
 func (m *HumanCronMapper) AddRulesFromFile(filePath string) error {
 	rules, err := LoadRulesFromFile(filePath)
 	if err != nil {

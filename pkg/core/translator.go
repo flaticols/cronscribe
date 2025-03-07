@@ -1,4 +1,4 @@
-package cronscribe
+package core
 
 import (
 	"fmt"
@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-// TranslateRule преобразует совпадение в cron-выражение по правилу
+// TranslateRule converts a match to a cron expression according to the rule
 func TranslateRule(rule *Rule, match []string, dictionaries map[string]map[string]string) (string, error) {
-	// Извлекаем переменные из совпадения
+	// Extract variables from the match
 	variables := make(map[string]string)
 	for name, index := range rule.Variables {
 		if index < len(match) {
@@ -16,14 +16,14 @@ func TranslateRule(rule *Rule, match []string, dictionaries map[string]map[strin
 		}
 	}
 
-	// Применяем значения по умолчанию для отсутствующих переменных
+	// Apply default values for missing variables
 	for name, value := range rule.DefaultValues {
 		if _, exists := variables[name]; !exists || variables[name] == "" {
 			variables[name] = value
 		}
 	}
 
-	// Преобразуем строковые переменные в числовые, если необходимо
+	// Convert string variables to numeric if needed
 	for name, value := range variables {
 		if name == "hour" || name == "minute" || name == "day" {
 			if i, err := strconv.Atoi(value); err == nil {
@@ -32,12 +32,12 @@ func TranslateRule(rule *Rule, match []string, dictionaries map[string]map[strin
 		}
 	}
 
-	// Применяем преобразования для переменных
+	// Apply transformations to variables
 	if err := rule.ApplyTransformations(variables, dictionaries); err != nil {
 		return "", err
 	}
 
-	// Проверяем специальные случаи
+	// Check special cases
 	for _, specialCase := range rule.SpecialCases {
 		condition := specialCase.Condition
 		for k, v := range variables {
@@ -50,31 +50,31 @@ func TranslateRule(rule *Rule, match []string, dictionaries map[string]map[strin
 		}
 	}
 
-	// Используем стандартный формат
+	// Use standard format
 	return applyFormatWithDictionaries(rule.Format, variables, dictionaries, rule.Dictionaries)
 }
 
-// applyFormatWithDictionaries применяет формат с заменой переменных и значений словарей
+// applyFormatWithDictionaries applies format with variable and dictionary value substitution
 func applyFormatWithDictionaries(format string, variables map[string]string, dictionaries map[string]map[string]string, dictionaryMap map[string]string) (string, error) {
 	result := format
 
-	// Заменяем переменные в формате
+	// Replace variables in the format
 	for name, value := range variables {
-		// Проверяем, нужно ли использовать словарь для этой переменной
+		// Check if we need to use a dictionary for this variable
 		if dictName, ok := dictionaryMap[name]; ok {
 			dict, dictExists := dictionaries[dictName]
 			if dictExists {
-				// Ищем значение в словаре
+				// Look up the value in the dictionary
 				if dictValue, valueExists := dict[value]; valueExists {
 					result = strings.ReplaceAll(result, "%"+name, dictValue)
 				} else {
-					return "", fmt.Errorf("значение '%s' не найдено в словаре '%s'", value, dictName)
+					return "", fmt.Errorf("value '%s' not found in dictionary '%s'", value, dictName)
 				}
 			} else {
-				return "", fmt.Errorf("словарь '%s' не найден", dictName)
+				return "", fmt.Errorf("dictionary '%s' not found", dictName)
 			}
 		} else {
-			// Прямая замена значения
+			// Direct value replacement
 			result = strings.ReplaceAll(result, "%"+name, value)
 		}
 	}

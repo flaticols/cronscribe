@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
-	"github.com/flaticols/cronscribe"
+	"github.com/flaticols/cronscribe/pkg/ai"
+	"github.com/flaticols/cronscribe/pkg/core"
 	"github.com/sashabaranov/go-openai"
 )
 
-// OpenAIProvider implements cronscribe.AIProvider using OpenAI API
+// OpenAIProvider implements ai.AIProvider using OpenAI API
 type OpenAIProvider struct {
 	client *openai.Client
 }
@@ -22,9 +24,9 @@ func NewOpenAIProvider(apiKey string) *OpenAIProvider {
 
 // GenerateCron generates a cron expression from human text using OpenAI
 func (p *OpenAIProvider) GenerateCron(ctx context.Context, input string) (string, error) {
-	// Use recommended prompts from cronscribe
-	systemPrompt := cronscribe.RecommendedSystemPrompt()
-	userPrompt := cronscribe.RecommendedUserPrompt(input)
+	// Use recommended prompts from ai package
+	systemPrompt := ai.RecommendedSystemPrompt()
+	userPrompt := ai.RecommendedUserPrompt(input)
 
 	// Call OpenAI API
 	resp, err := p.client.CreateChatCompletion(
@@ -64,17 +66,63 @@ func main() {
 		return
 	}
 
-	// Create OpenAI provider
+	// Find the rules directory
+	exDir, err := filepath.Abs(".")
+	if err != nil {
+		fmt.Println("Failed to get current directory:", err)
+		return
+	}
+	
+	// Try different paths for rules directory
+	var rulesPath string
+	possiblePaths := []string{
+		filepath.Join(exDir, "pkg", "core", "rules"),                   // If running from project root
+		filepath.Join(exDir, "..", "..", "pkg", "core", "rules"),       // If running from examples/brave_mode
+	}
+	
+	for _, path := range possiblePaths {
+		if _, err := os.Stat(path); err == nil {
+			rulesPath = path
+			break
+		}
+	}
+	
+	if rulesPath == "" {
+		fmt.Println("Unable to find rules directory")
+		return
+	}
+	
+	fmt.Println("Using rules from:", rulesPath)
+	
+	// OPTION 1: Create standalone CronScribeAI instance
+	fmt.Println("=== Using AI with fallback to local rules ===")
 	openaiProvider := NewOpenAIProvider(apiKey)
-
-	// Create a brave mapper that can use both local rules and AI
-	mapper, err := cronscribe.NewBraveHumanCronMapper(
-		"../../rules", 
+	cronscribeAI, err := ai.New(
+		rulesPath,
 		openaiProvider,
-		cronscribe.WithAIFirst(false), // Try local rules first, fallback to AI
+		ai.WithAIFirst(false), // Try local rules first, fallback to AI
 	)
 	if err != nil {
-		fmt.Println("Error creating mapper:", err)
+		fmt.Println("Error creating CronScribeAI:", err)
+		return
+	}
+
+	// OPTION 2: Create core instance first, then integrate with AI
+	fmt.Println("\n=== Using core instance with AI extension ===")
+	coreInstance, err := core.New(rulesPath)
+	if err != nil {
+		fmt.Println("Error creating CronScribe core:", err)
+		return
+	}
+
+	// Now create AI version using the existing core instance
+	cronscribeWithCore, err := ai.WithCore(
+		coreInstance,
+		openaiProvider,
+		ai.WithAIFirst(true), // Try AI first this time
+	)
+	if err != nil {
+		fmt.Println("Error creating AI with core:", err)
 		return
 	}
 
@@ -87,15 +135,45 @@ func main() {
 		"every four hours starting at midnight",
 	}
 
+	// Test with first instance (local rules first)
+	fmt.Println("\n--- Using local rules first, AI as fallback ---")
 	for _, expr := range expressions {
 		fmt.Printf("Human: %s\n", expr)
 		
-		cronExpr, err := mapper.ToCron(expr)
+		cronExpr, err := cronscribeAI.ToCron(expr)
 		if err != nil {
 			fmt.Printf("Error: %s\n\n", err)
 			continue
 		}
 		
 		fmt.Printf("Cron: %s\n\n", cronExpr)
+	}
+
+	// Test with second instance (AI first)
+	fmt.Println("\n--- Using AI first, local rules as fallback ---")
+	for _, expr := range expressions {
+		fmt.Printf("Human: %s\n", expr)
+		
+		cronExpr, err := cronscribeWithCore.ToCron(expr)
+		if err != nil {
+			fmt.Printf("Error: %s\n\n", err)
+			continue
+		}
+		
+		fmt.Printf("Cron: %s\n\n", cronExpr)
+	}
+
+	// Demonstrate language support using core functionality
+	fmt.Println("\n--- Demonstrating language features (from core) ---")
+	fmt.Printf("Supported languages: %v\n", cronscribeAI.GetSupportedLanguages())
+	
+	// Try auto-detection
+	russianExpr := "каждый понедельник в 9 утра"
+	fmt.Printf("Russian: %s\n", russianExpr)
+	cronExpr, err := cronscribeAI.AutoDetect(russianExpr)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+	} else {
+		fmt.Printf("Cron: %s\n", cronExpr)
 	}
 }
