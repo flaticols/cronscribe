@@ -1,11 +1,18 @@
-package core
+package rules
 
 import (
+	"embed"
 	"fmt"
+	"gopkg.in/yaml.v3"
+	"io/ioutil"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 )
+
+//go:embed *.yaml
+var rules embed.FS
 
 // Rule represents a rule for converting human-readable expression to cron
 type Rule struct {
@@ -75,7 +82,7 @@ func (r *Rule) ApplyTransformations(variables map[string]string, dictionaries ma
 			// Evaluate the condition
 			// Note: For simplicity, we use basic condition evaluation.
 			// In a real application, it's better to use a library for expressions
-			if evalCondition(condition) {
+			if EvalCondition(condition) {
 				// Replace variables in the operation
 				operation := t.Operation
 				for k, v := range variables {
@@ -99,7 +106,7 @@ func (r *Rule) ApplyTransformations(variables map[string]string, dictionaries ma
 
 // evalCondition evaluates a simple condition
 // Simplified version for example
-func evalCondition(condition string) bool {
+func EvalCondition(condition string) bool {
 	if strings.Contains(condition, "==") {
 		parts := strings.Split(condition, "==")
 		left := strings.TrimSpace(parts[0])
@@ -140,4 +147,46 @@ func evalOperation(operation, currentValue string) (string, error) {
 	}
 
 	return operation, nil
+}
+
+// LoadAllRules loads rules for all languages from a directory
+func LoadAllRules(directory string) (map[string]*Rules, error) {
+	files, err := filepath.Glob(filepath.Join(directory, "*.yaml"))
+	if err != nil {
+		return nil, fmt.Errorf("error finding rule files: %w", err)
+	}
+
+	allRules := make(map[string]*Rules)
+	for _, file := range files {
+		rules, err := LoadRulesFromFile(file)
+		if err != nil {
+			return nil, fmt.Errorf("error loading rules from %s: %w", file, err)
+		}
+
+		allRules[rules.Language] = rules
+	}
+
+	return allRules, nil
+}
+
+// LoadRulesFromFile loads rules from a YAML file
+func LoadRulesFromFile(filePath string) (*Rules, error) {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading rules file: %w", err)
+	}
+
+	var rules Rules
+	if err := yaml.Unmarshal(data, &rules); err != nil {
+		return nil, fmt.Errorf("error parsing YAML: %w", err)
+	}
+
+	// Compile regular expressions for all rules
+	for i := range rules.Rules {
+		if err := rules.Rules[i].CompilePattern(); err != nil {
+			return nil, fmt.Errorf("error compiling regex for rule %s: %w", rules.Rules[i].Name, err)
+		}
+	}
+
+	return &rules, nil
 }

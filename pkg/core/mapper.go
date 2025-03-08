@@ -2,18 +2,19 @@ package core
 
 import (
 	"fmt"
+	R "github.com/flaticols/cronscribe/pkg/core/rules"
 	"strings"
 )
 
 // HumanCronMapper converts human-readable scheduling expressions to cron format
 type HumanCronMapper struct {
-	allRules     map[string]*Rules
-	currentRules *Rules
+	allRules     map[string]*R.Rules
+	currentRules *R.Rules
 }
 
 // NewHumanCronMapper creates a new mapper instance
 func NewHumanCronMapper(rulesDir string) (*HumanCronMapper, error) {
-	allRules, err := LoadAllRules(rulesDir)
+	allRules, err := R.LoadAllRules(rulesDir)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +98,7 @@ func (m *HumanCronMapper) GetSupportedLanguages() []string {
 
 // AddRulesFromFile adds rules from a file
 func (m *HumanCronMapper) AddRulesFromFile(filePath string) error {
-	rules, err := LoadRulesFromFile(filePath)
+	rules, err := R.LoadRulesFromFile(filePath)
 	if err != nil {
 		return err
 	}

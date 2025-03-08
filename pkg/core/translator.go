@@ -2,12 +2,19 @@ package core
 
 import (
 	"fmt"
+	R "github.com/flaticols/cronscribe/pkg/core/rules"
 	"strconv"
 	"strings"
 )
 
+type (
+	VariableMap   map[string]string
+	DictionaryMap map[string]string
+	Dictionaries  map[string]map[string]string
+)
+
 // TranslateRule converts a match to a cron expression according to the rule
-func TranslateRule(rule *Rule, match []string, dictionaries map[string]map[string]string) (string, error) {
+func TranslateRule(rule *R.Rule, match []string, dictionaries map[string]map[string]string) (string, error) {
 	// Extract variables from the match
 	variables := make(map[string]string)
 	for name, index := range rule.Variables {
@@ -44,7 +51,7 @@ func TranslateRule(rule *Rule, match []string, dictionaries map[string]map[strin
 			condition = strings.ReplaceAll(condition, k, fmt.Sprintf("\"%s\"", v))
 		}
 
-		if evalCondition(condition) {
+		if R.EvalCondition(condition) {
 			format := specialCase.Format
 			return applyFormatWithDictionaries(format, variables, dictionaries, rule.Dictionaries)
 		}
@@ -54,8 +61,8 @@ func TranslateRule(rule *Rule, match []string, dictionaries map[string]map[strin
 	return applyFormatWithDictionaries(rule.Format, variables, dictionaries, rule.Dictionaries)
 }
 
-// applyFormatWithDictionaries applies format with variable and dictionary value substitution
-func applyFormatWithDictionaries(format string, variables map[string]string, dictionaries map[string]map[string]string, dictionaryMap map[string]string) (string, error) {
+// applyFormatWithDictionaries applies a format with variable and dictionary value substitution
+func applyFormatWithDictionaries(format string, variables VariableMap, dictionaries Dictionaries, dictionaryMap DictionaryMap) (string, error) {
 	result := format
 
 	// Replace variables in the format
