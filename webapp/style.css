@@ -1,0 +1,137 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+:root {
+  /* Light theme variables */
+  --bg-color: #f5f5f5;
+  --text-color: #333;
+  --input-bg: #ffffff;
+  --input-border: #ddd;
+  --input-text: #333;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme using prefers-color-scheme media query */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #222;
+    --text-color: #eee;
+    --input-bg: #333;
+    --input-border: #555;
+    --input-text: #fff;
+    --shadow-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+body {
+  font-family: 'Georgia', 'Times New Roman', Times, serif;
+  line-height: 1.6;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 2rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+h2 {
+  margin: 0.5rem 0 0;
+  font-size: 1.2rem;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+main {
+  width: 100%;
+  flex: 1;
+  padding: 1rem;
+}
+
+input {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  font-family: Arial, Helvetica, sans-serif;
+  border: 1px solid var(--input-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 5px var(--shadow-color);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  transition: all 0.3s ease;
+}
+
+input:focus {
+  outline: none;
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.hint-text {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  font-style: italic;
+  color: var(--text-color);
+}
+
+footer {
+  padding: 1rem;
+  text-align: center;
+  margin-top: auto;
+}
+
+/* Media query for desktop */
+@media screen and (min-width: 768px) {
+  .container {
+    width: 85%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1rem;
+  }
+
+  input {
+    font-size: 1rem;
+  }
+}
