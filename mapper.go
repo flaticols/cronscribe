@@ -1,35 +1,36 @@
-package core
+package cronscribe
 
 import (
 	"fmt"
-	R "github.com/flaticols/cronscribe/pkg/core/rules"
+	"github.com/flaticols/cronscribe/pkg/langs"
+	"github.com/flaticols/cronscribe/pkg/rules"
 	"strings"
 )
 
-// HumanCronMapper converts human-readable scheduling expressions to cron format
-type HumanCronMapper struct {
-	allRules     map[string]*R.Rules
-	currentRules *R.Rules
+// Mapper converts human-readable scheduling expressions to cron format
+type Mapper struct {
+	langs        map[string]*rules.RuleSet
+	currentRules *rules.RuleSet
 }
 
-// NewHumanCronMapper creates a new mapper instance
-func NewHumanCronMapper(rulesDir string) (*HumanCronMapper, error) {
-	allRules, err := R.LoadAllRules(rulesDir)
+// NewMapper creates a new mapper instance
+func NewMapper() (*Mapper, error) {
+	allRules, err := rules.LoadDefaultRules()
 	if err != nil {
 		return nil, err
 	}
 
-	mapper := &HumanCronMapper{
-		allRules: allRules,
+	mapper := &Mapper{
+		langs: allRules,
 	}
 
 	// By default, use English rules if available
-	if rules, ok := allRules["en"]; ok {
-		mapper.currentRules = rules
+	if langRules, ok := allRules[langs.LangEN]; ok {
+		mapper.currentRules = langRules
 	} else {
 		// Otherwise use the first available rules
-		for _, rules := range allRules {
-			mapper.currentRules = rules
+		for _, langRules := range allRules {
+			mapper.currentRules = langRules
 			break
 		}
 	}
@@ -38,18 +39,18 @@ func NewHumanCronMapper(rulesDir string) (*HumanCronMapper, error) {
 }
 
 // SetLanguage sets the language for the mapper
-func (m *HumanCronMapper) SetLanguage(lang string) error {
-	rules, ok := m.allRules[lang]
+func (m *Mapper) SetLanguage(lang string) error {
+	langRules, ok := m.langs[lang]
 	if !ok {
 		return fmt.Errorf("unsupported language: %s", lang)
 	}
 
-	m.currentRules = rules
+	m.currentRules = langRules
 	return nil
 }
 
 // ToCron converts a human-readable expression to cron format
-func (m *HumanCronMapper) ToCron(expression string) (string, error) {
+func (m *Mapper) ToCron(expression string) (string, error) {
 	if m.currentRules == nil {
 		return "", fmt.Errorf("rules not loaded")
 	}
@@ -68,14 +69,14 @@ func (m *HumanCronMapper) ToCron(expression string) (string, error) {
 }
 
 // AutoDetectAndConvert tries to automatically detect the language and convert the expression
-func (m *HumanCronMapper) AutoDetectAndConvert(expression string) (string, error) {
+func (m *Mapper) AutoDetectAndConvert(expression string) (string, error) {
 	expr := strings.ToLower(strings.TrimSpace(expression))
 
 	// Go through all languages
-	for _, rules := range m.allRules {
-		for _, rule := range rules.Rules {
+	for _, langRules := range m.langs {
+		for _, rule := range langRules.Rules {
 			if match := rule.Match(expr); match != nil {
-				cronExpr, err := TranslateRule(&rule, match, rules.Dictionaries)
+				cronExpr, err := TranslateRule(&rule, match, langRules.Dictionaries)
 				if err != nil {
 					continue
 				}
@@ -88,21 +89,10 @@ func (m *HumanCronMapper) AutoDetectAndConvert(expression string) (string, error
 }
 
 // GetSupportedLanguages returns a list of supported languages
-func (m *HumanCronMapper) GetSupportedLanguages() []string {
-	languages := make([]string, 0, len(m.allRules))
-	for lang := range m.allRules {
+func (m *Mapper) GetSupportedLanguages() []string {
+	languages := make([]string, 0, len(m.langs))
+	for lang := range m.langs {
 		languages = append(languages, lang)
 	}
 	return languages
-}
-
-// AddRulesFromFile adds rules from a file
-func (m *HumanCronMapper) AddRulesFromFile(filePath string) error {
-	rules, err := R.LoadRulesFromFile(filePath)
-	if err != nil {
-		return err
-	}
-
-	m.allRules[rules.Language] = rules
-	return nil
 }

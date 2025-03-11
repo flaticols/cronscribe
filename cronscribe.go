@@ -1,19 +1,41 @@
 package cronscribe
 
-import (
-	"github.com/flaticols/cronscribe/pkg/core"
-)
+// Version is the current version of the CronScribe core package
+const Version = "1.0.0"
 
-// CronScribe provides the main functionality for cron expression conversion
+// CronScribe is the main entry point for using the core functionality
 type CronScribe struct {
-	*core.CronScribe
+	mapper *Mapper
 }
 
-// New creates a new instance of CronScribe with the default rule-based mapper
-func New(rulesDir string) (*CronScribe, error) {
-	c, err := core.New(rulesDir)
+// New creates a new CronScribe instance
+func New() (*CronScribe, error) {
+	mapper, err := NewMapper()
 	if err != nil {
 		return nil, err
 	}
-	return &CronScribe{CronScribe: c}, nil
+
+	return &CronScribe{
+		mapper: mapper,
+	}, nil
+}
+
+// Convert transforms a human-readable scheduling expression to a cron expression
+func (c *CronScribe) Convert(expression string) (string, error) {
+	return c.mapper.ToCron(expression)
+}
+
+// AutoDetect tries to automatically detect the language and convert the expression
+func (c *CronScribe) AutoDetect(expression string) (string, error) {
+	return c.mapper.AutoDetectAndConvert(expression)
+}
+
+// SetLanguage sets the language for processing expressions
+func (c *CronScribe) SetLanguage(lang string) error {
+	return c.mapper.SetLanguage(lang)
+}
+
+// GetSupportedLanguages returns a list of supported languages
+func (c *CronScribe) GetSupportedLanguages() []string {
+	return c.mapper.GetSupportedLanguages()
 }

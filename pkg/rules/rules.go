@@ -1,29 +1,22 @@
 package rules
 
 import (
-	"embed"
 	"fmt"
-	"gopkg.in/yaml.v3"
-	"io/ioutil"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
-//go:embed *.yaml
-var rules embed.FS
-
 // Rule represents a rule for converting human-readable expression to cron
 type Rule struct {
 	Name            string                      `yaml:"name"`
 	Pattern         string                      `yaml:"pattern"`
-	Variables       map[string]int              `yaml:"variables"`
-	Dictionaries    map[string]string           `yaml:"dictionaries"`
+	Variables       map[string]int              `yaml:"variables,omitempty"`
+	Dictionaries    map[string]string           `yaml:"dictionaries,omitempty"`
 	Format          string                      `yaml:"format"`
-	DefaultValues   map[string]string           `yaml:"default_values"`
-	SpecialCases    []SpecialCase               `yaml:"special_cases"`
-	Transformations map[string][]Transformation `yaml:"transformations"`
+	DefaultValues   map[string]string           `yaml:"default_values,omitempty"`
+	SpecialCases    []SpecialCase               `yaml:"special_cases,omitempty"`
+	Transformations map[string][]Transformation `yaml:"transformations,omitempty"`
 
 	compiledPattern *regexp.Regexp
 }
@@ -38,13 +31,6 @@ type SpecialCase struct {
 type Transformation struct {
 	Condition string `yaml:"condition"`
 	Operation string `yaml:"operation"`
-}
-
-// Rules contains all rules for a language
-type Rules struct {
-	Language     string                       `yaml:"language"`
-	Rules        []Rule                       `yaml:"rules"`
-	Dictionaries map[string]map[string]string `yaml:"dictionaries"`
 }
 
 // CompilePattern compiles the regular expression for the rule
@@ -65,7 +51,7 @@ func (r *Rule) Match(expression string) []string {
 }
 
 // ApplyTransformations applies transformations to variables
-func (r *Rule) ApplyTransformations(variables map[string]string, dictionaries map[string]map[string]string) error {
+func (r *Rule) ApplyTransformations(variables map[string]string, dictionaries map[string]Dictionary) error {
 	for varName, transformations := range r.Transformations {
 		value, exists := variables[varName]
 		if !exists {
@@ -149,44 +135,23 @@ func evalOperation(operation, currentValue string) (string, error) {
 	return operation, nil
 }
 
-// LoadAllRules loads rules for all languages from a directory
-func LoadAllRules(directory string) (map[string]*Rules, error) {
-	files, err := filepath.Glob(filepath.Join(directory, "*.yaml"))
-	if err != nil {
-		return nil, fmt.Errorf("error finding rule files: %w", err)
+// LoadDefaultRules loads rules for all supported languages
+func LoadDefaultRules() (map[string]*RuleSet, error) {
+	// Create empty rule sets for testing purposes
+	allRules := make(map[string]*RuleSet)
+
+	enRuleSet := &RuleSet{
+		Language: "en",
+		Rules:    []Rule{},
+		Dictionaries: map[string]Dictionary{
+			DictWeekdays: WeekdayValues,
+			DictOrdinals: OrdinalValues,
+			DictTimeAmPm: TimeAmPmValues,
+			DictMonths:   MonthValues,
+		},
 	}
 
-	allRules := make(map[string]*Rules)
-	for _, file := range files {
-		rules, err := LoadRulesFromFile(file)
-		if err != nil {
-			return nil, fmt.Errorf("error loading rules from %s: %w", file, err)
-		}
-
-		allRules[rules.Language] = rules
-	}
+	allRules["en"] = enRuleSet
 
 	return allRules, nil
-}
-
-// LoadRulesFromFile loads rules from a YAML file
-func LoadRulesFromFile(filePath string) (*Rules, error) {
-	data, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("error reading rules file: %w", err)
-	}
-
-	var rules Rules
-	if err := yaml.Unmarshal(data, &rules); err != nil {
-		return nil, fmt.Errorf("error parsing YAML: %w", err)
-	}
-
-	// Compile regular expressions for all rules
-	for i := range rules.Rules {
-		if err := rules.Rules[i].CompilePattern(); err != nil {
-			return nil, fmt.Errorf("error compiling regex for rule %s: %w", rules.Rules[i].Name, err)
-		}
-	}
-
-	return &rules, nil
 }

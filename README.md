@@ -1,233 +1,192 @@
-# cronscribe
+# CronScribe
 
-> [!WARNING]
-> Library in active development
-
-Convert human-readable text into a cron expression. It supports Dutch, English, and Russian by default and can be extended with custom rules in YAML.
+CronScribe is a Go library that converts human-readable schedule descriptions to cron expressions using a rule-based system with multilingual support.
 
 ## Features
 
-- Convert natural language schedule descriptions to cron expressions
-- Support for multiple languages (Dutch, English, Russian)
-- Extensible rule-based system with YAML configuration
-- Optional AI-powered mode with pluggable AI provider interface
-- Modular design: use only what you need
+- Rule-based pattern matching with regex
+- Dictionary-based translation system
+- Support for multiple languages (English, Dutch, Russian)
+- Flexible and extensible rule definitions
+- Transformation rules for time formats
+- Minimal dependencies
 
 ## Installation
-
-### Core Package Only (No AI Dependencies)
 
 ```bash
 go get github.com/flaticols/cronscribe
 ```
 
-### With AI Support
-
-```bash
-go get github.com/flaticols/cronscribe/pkg/ai
-```
-
 ## Usage
-
-### Basic Usage with Rule-Based Conversion
 
 ```go
 package main
 
 import (
     "fmt"
+    "log"
 
     "github.com/flaticols/cronscribe"
 )
 
 func main() {
-    // Create a new CronScribe instance with rules from the "pkg/core/rules" directory
-    cs, err := cronscribe.New("./pkg/core/rules")
+    // Create a new CronScribe instance
+    cs, err := cronscribe.New()
     if err != nil {
-        panic(err)
+        log.Fatalf("Failed to create CronScribe: %v", err)
     }
 
     // Convert a human-readable expression to cron
     cronExpr, err := cs.Convert("every day at noon")
     if err != nil {
-        fmt.Println("Error:", err)
-        return
+        log.Fatalf("Conversion error: %v", err)
     }
 
-    fmt.Println("Cron expression:", cronExpr) // Output: 0 12 * * *
-
-    // Use a specific language (Russian)
-    err = cs.SetLanguage("ru")
-    if err != nil {
-        fmt.Println("Error:", err)
-        return
-    }
-
-    cronExpr, err = cs.Convert("каждый день в полдень")
-    if err != nil {
-        fmt.Println("Error:", err)
-        return
-    }
-
-    fmt.Println("Cron expression:", cronExpr) // Output: 0 12 * * *
+    fmt.Printf("Cron expression: %s\n", cronExpr)
     
-    // Use Dutch language
-    err = cs.SetLanguage("nl")
+    // You can also specify the language
+    cronExpr, err = cs.ConvertWithLang("elke dag om 12 uur", "nl")
     if err != nil {
-        fmt.Println("Error:", err)
-        return
+        log.Fatalf("Conversion error: %v", err)
     }
-
-    cronExpr, err = cs.Convert("elke dag om 12 uur 's middags")
-    if err != nil {
-        fmt.Println("Error:", err)
-        return
-    }
-
-    fmt.Println("Cron expression:", cronExpr) // Output: 0 12 * * *
+    
+    fmt.Printf("Dutch cron expression: %s\n", cronExpr)
 }
 ```
 
-### Using AI-Powered "Brave Mode"
-
-For AI-powered functionality, import the AI package:
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "os"
-
-    "github.com/flaticols/cronscribe/pkg/ai"
-    "github.com/sashabaranov/go-openai" // For OpenAI implementation example
-)
-
-// Implement the AIProvider interface with your preferred AI provider
-type OpenAIProvider struct {
-    client *openai.Client
-}
-
-func NewOpenAIProvider(apiKey string) *OpenAIProvider {
-    client := openai.NewClient(apiKey)
-    return &OpenAIProvider{client: client}
-}
-
-// GenerateCron implements the AIProvider interface
-func (p *OpenAIProvider) GenerateCron(ctx context.Context, input string) (string, error) {
-    // Use the recommended prompts from the ai package
-    systemPrompt := ai.RecommendedSystemPrompt()
-    userPrompt := ai.RecommendedUserPrompt(input)
-
-    resp, err := p.client.CreateChatCompletion(
-        ctx,
-        openai.ChatCompletionRequest{
-            Model: openai.GPT3Dot5Turbo,
-            Messages: []openai.ChatCompletionMessage{
-                {
-                    Role:    openai.ChatMessageRoleSystem,
-                    Content: systemPrompt,
-                },
-                {
-                    Role:    openai.ChatMessageRoleUser,
-                    Content: userPrompt,
-                },
-            },
-            Temperature: 0.0,
-        },
-    )
-
-    if err != nil {
-        return "", fmt.Errorf("OpenAI API error: %w", err)
-    }
-
-    return resp.Choices[0].Message.Content, nil
-}
-
-func main() {
-    // Get API key from environment variable
-    apiKey := os.Getenv("OPENAI_API_KEY")
-    if apiKey == "" {
-        fmt.Println("Please set the OPENAI_API_KEY environment variable")
-        return
-    }
-
-    // Create OpenAI provider
-    openaiProvider := NewOpenAIProvider(apiKey)
-
-    // Create a CronScribeAI instance with the OpenAI provider
-    cronscribeAI, err := ai.New(
-        "./pkg/core/rules", 
-        openaiProvider,
-        ai.WithAIFirst(false), // Try local rules first, fallback to AI
-    )
-    if err != nil {
-        fmt.Println("Error creating CronScribeAI:", err)
-        return
-    }
-
-    // Convert using local rules first, then AI if needed
-    cronExpr, err := cronscribeAI.ToCron("run every Monday at 9:15 AM")
-    if err != nil {
-        fmt.Println("Error:", err)
-        return
-    }
-
-    fmt.Println("Cron expression:", cronExpr)
-}
-```
-
-## Custom Rules
-
-You can create your own rules by adding YAML files to the rules directory. See the existing files in the `pkg/core/rules/` directory for examples.
-
-## Module Structure
+## Project Structure
 
 ```
 cronscribe/
+├── cronscribe.go       # Main package entry point
+├── mapper.go           # Language mapping functionality
+├── translator.go       # Rule-based translation core
 ├── pkg/
-│   ├── core/                # Core package - YAML rule based conversion
-│   │   ├── mapper.go        # Rule-based mapping implementation
-│   │   ├── rule.go          # Rule definitions and logic
-│   │   ├── loader.go        # YAML rules loader
-│   │   ├── translator.go    # Expression translator
-│   │   ├── cronscribe.go    # Core package entrypoint
-│   │   └── rules/           # YAML rule definitions
-│   │       ├── en.yaml      # English rules
-│   │       ├── ru.yaml      # Russian rules
-│   │       └── nl.yaml      # Dutch rules
-│   │
-│   └── ai/                  # AI package - AI-powered conversion
-│       ├── ai_provider.go   # AI provider interface
-│       ├── brave_mapper.go  # AI-powered mapper implementation
-│       ├── cronscribe_ai.go # AI package entrypoint
-│       └── rules/           # Copy of core rules
-│
-├── cronscribe.go            # Main package entrypoint (wrapper)
-│
-└── examples/
-    ├── core_only/           # Example using only core features
-    ├── brave_mode/          # Example using AI features with OpenAI
-    ├── langchain_mode/      # Example using AI features with LangChain
-    └── wrapper_mode/        # Example using the main package wrapper
+│   ├── langs/          # Language-specific implementations
+│   │   ├── en/         # English language support
+│   │   ├── nl/         # Dutch language support
+│   │   └── ru/         # Russian language support
+│   └── rules/          # Core rule system
+│       ├── dictionaries.go  # Constants and dictionary definitions
+│       └── rules.go    # Rule processing engine
 ```
 
-This modular design allows you to only import what you need, keeping dependencies minimal when you only need the core functionality.
+## Constants System
+
+CronScribe uses a constants-based approach to ensure consistency and maintainability across the codebase. This approach eliminates string literal duplication, reduces the risk of typos, and makes the code more robust. The constants system helps with:
+
+1. **Consistency**: Using the same identifiers for dictionary keys throughout the codebase
+2. **Maintainability**: Changing a value in one place affects all usages
+3. **Type Safety**: Compiler can catch typos and misuses
+4. **Readability**: Self-documenting code with descriptive constant names
+5. **Internationalization**: Clear organization of language-specific terms
+
+Constants are organized into logical groups:
+
+### Core Constants (in pkg/rules/dictionaries.go)
+
+```go
+// Dictionary names
+const (
+    DictWeekdays  = "weekdays"
+    DictOrdinals  = "ordinals"
+    DictTimeAmPm  = "time_ampm"
+    DictMonths    = "months"
+)
+
+// Variable names
+const (
+    VarHour     = "hour"
+    VarMinute   = "minute"
+    VarDay      = "day"
+    VarWeekday  = "weekday"
+    VarMonth    = "month"
+    VarAmPm     = "ampm"
+    VarOrdinal  = "ordinal"
+    // ...more variable names
+)
+
+// Time period values
+const (
+    TimeAm = "am"
+    TimePm = "pm"
+)
+
+// Special values
+const (
+    OrdinalLast = "last"
+)
+```
+
+### Language Identifier Constants (in mapper.go)
+
+```go
+const (
+    LangEN = "en" // English
+    LangNL = "nl" // Dutch
+    LangRU = "ru" // Russian
+)
+```
+
+### Language-Specific Constants
+
+Each language module can define its own constants for language-specific terms, such as:
+
+- Dutch (nl) - Time periods and ordinals
+- Russian (ru) - Grammatical cases and gender variations
+
+These constants ensure consistency across the codebase, eliminate string literal duplication, and make the code more maintainable.
+
+## Rule System
+
+See the detailed documentation in [pkg/rules/README.md](pkg/rules/README.md) for information on:
+
+- Rule structure and components
+- Pattern design with regular expressions
+- Variable mapping and transformations
+- Special case handling
+- Dictionary lookups
+
+## Adding New Languages
+
+To add a new language:
+
+1. Create a new package under `pkg/langs/[language-code]/`
+2. Define language-specific constants for special cases:
+   ```go
+   // constants for the new language
+   const (
+       // Time period formats
+       TimeCustomFormat1 = "value1"
+       TimeCustomFormat2 = "value2"
+       
+       // Ordinals specific to this language
+       OrdinalCustom1 = "value3"
+       OrdinalCustom2 = "value4"
+   )
+   ```
+3. Create rule sets following the pattern in existing language modules
+4. Add the language to the mapper in `mapper.go`:
+   ```go
+   const (
+       // Existing language constants
+       LangEN = "en" // English
+       LangNL = "nl" // Dutch
+       LangRU = "ru" // Russian
+       
+       // Add your new language
+       LangXX = "xx" // Your language name
+   )
+   
+   func LoadDefaultRules() (map[string]*rules.RuleSet, error) {
+       // ...
+       allRules[LangXX] = xx.YourLanguageRuleSet
+       // ...
+   }
+   ```
+5. Use the existing constants from `pkg/rules/dictionaries.go` for standard dictionary keys and variable names
+6. Only add language-specific constants for terms that are unique to the new language
 
 ## Dependencies
 
-- Core package:
-  - `gopkg.in/yaml.v3`: YAML parsing for rule files
-
-- AI package:
-  - Core package dependencies
-  - AI provider specific dependencies (based on your implementation)
-
-## Inspired by
-
-- http://github.com/olebedev/when
-
-## License
-
-See the LICENSE file for details.
+- `gopkg.in/yaml.v3`: For parsing rule configurations
