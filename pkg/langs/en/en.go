@@ -2,8 +2,8 @@ package en
 
 import "github.com/flaticols/cronscribe/pkg/rules"
 
-// EnglishRuleSet contains English language rules and dictionaries
-var EnglishRuleSet = &rules.RuleSet{
+// RuleSet contains English language rules and dictionaries
+var RuleSet = &rules.RuleSet{
 	Language: "en",
 	Dictionaries: map[string]rules.Dictionary{
 		rules.DictWeekdays: rules.WeekdayValues,
@@ -238,7 +238,7 @@ var EnglishRuleSet = &rules.RuleSet{
 
 func init() {
 	// Compile the patterns for all English rules
-	for i := range EnglishRuleSet.Rules {
-		_ = EnglishRuleSet.Rules[i].CompilePattern()
+	for i := range RuleSet.Rules {
+		_ = RuleSet.Rules[i].CompilePattern()
 	}
 }
