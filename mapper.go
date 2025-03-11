@@ -3,6 +3,9 @@ package cronscribe
 import (
 	"fmt"
 	"github.com/flaticols/cronscribe/pkg/langs"
+	"github.com/flaticols/cronscribe/pkg/langs/en"
+	"github.com/flaticols/cronscribe/pkg/langs/nl"
+	"github.com/flaticols/cronscribe/pkg/langs/ru"
 	"github.com/flaticols/cronscribe/pkg/rules"
 	"strings"
 )
@@ -15,10 +18,7 @@ type Mapper struct {
 
 // NewMapper creates a new mapper instance
 func NewMapper() (*Mapper, error) {
-	allRules, err := rules.LoadDefaultRules()
-	if err != nil {
-		return nil, err
-	}
+	allRules := loadDefaultRules()
 
 	mapper := &Mapper{
 		langs: allRules,
@@ -95,4 +95,14 @@ func (m *Mapper) GetSupportedLanguages() []string {
 		languages = append(languages, lang)
 	}
 	return languages
+}
+
+// loadDefaultRules loads rules for all supported languages
+func loadDefaultRules() map[string]*rules.RuleSet {
+	// Create empty rule sets for testing purposes
+	return map[string]*rules.RuleSet{
+		langs.LangEN: en.RuleSet,
+		langs.LangNL: nl.RuleSet,
+		langs.LangRU: ru.RuleSet,
+	}
 }

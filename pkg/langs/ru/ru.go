@@ -81,8 +81,8 @@ var RussianMonthValues = map[string]string{
 	"декабря":  "12",
 }
 
-// RussianRuleSet contains Russian language rules and dictionaries
-var RussianRuleSet = &rules.RuleSet{
+// RuleSet contains Russian language rules and dictionaries
+var RuleSet = &rules.RuleSet{
 	Language: "ru",
 	Dictionaries: map[string]rules.Dictionary{
 		rules.DictWeekdays: RussianWeekdayValues,
@@ -387,7 +387,7 @@ var RussianRuleSet = &rules.RuleSet{
 
 func init() {
 	// Compile the patterns for all Russian rules
-	for i := range RussianRuleSet.Rules {
-		_ = RussianRuleSet.Rules[i].CompilePattern()
+	for i := range RuleSet.Rules {
+		_ = RuleSet.Rules[i].CompilePattern()
 	}
 }

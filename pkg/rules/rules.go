@@ -90,8 +90,7 @@ func (r *Rule) ApplyTransformations(variables map[string]string) error {
 	return nil
 }
 
-// evalCondition evaluates a simple condition
-// Simplified version for example
+// EvalCondition evaluates a simple condition
 func EvalCondition(condition string) bool {
 	if strings.Contains(condition, "==") {
 		parts := strings.Split(condition, "==")
@@ -133,25 +132,4 @@ func evalOperation(operation string) (string, error) {
 	}
 
 	return operation, nil
-}
-
-// LoadDefaultRules loads rules for all supported languages
-func LoadDefaultRules() (map[string]*RuleSet, error) {
-	// Create empty rule sets for testing purposes
-	allRules := make(map[string]*RuleSet)
-
-	enRuleSet := &RuleSet{
-		Language: "en",
-		Rules:    []Rule{},
-		Dictionaries: map[string]Dictionary{
-			DictWeekdays: WeekdayValues,
-			DictOrdinals: OrdinalValues,
-			DictTimeAmPm: TimeAmPmValues,
-			DictMonths:   MonthValues,
-		},
-	}
-
-	allRules["en"] = enRuleSet
-
-	return allRules, nil
 }

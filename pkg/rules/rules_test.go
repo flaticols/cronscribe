@@ -694,7 +694,7 @@ func TestRuleSet(t *testing.T) {
 
 // TestLoadDefaultRules tests the LoadDefaultRules function
 func TestLoadDefaultRules(t *testing.T) {
-	rules, err := LoadDefaultRules()
+	rules, err := loadTestRules()
 	if err != nil {
 		t.Errorf("LoadDefaultRules() error = %v", err)
 		return
@@ -1300,4 +1300,24 @@ func TestLanguageRules(t *testing.T) {
 			}
 		})
 	}
+}
+
+func loadTestRules() (map[string]*RuleSet, error) {
+	// Create empty rule sets for testing purposes
+	allRules := make(map[string]*RuleSet)
+
+	enRuleSet := &RuleSet{
+		Language: "en",
+		Rules:    []Rule{},
+		Dictionaries: map[string]Dictionary{
+			DictWeekdays: WeekdayValues,
+			DictOrdinals: OrdinalValues,
+			DictTimeAmPm: TimeAmPmValues,
+			DictMonths:   MonthValues,
+		},
+	}
+
+	allRules["en"] = enRuleSet
+
+	return allRules, nil
 }

@@ -50,8 +50,8 @@ var DutchMonthValues = map[string]string{
 	"december":  "12",
 }
 
-// DutchRuleSet contains Dutch language rules and dictionaries
-var DutchRuleSet = &rules.RuleSet{
+// RuleSet contains Dutch language rules and dictionaries
+var RuleSet = &rules.RuleSet{
 	Language: "nl",
 	Dictionaries: map[string]rules.Dictionary{
 		rules.DictWeekdays: DutchWeekdayValues,
@@ -286,7 +286,7 @@ var DutchRuleSet = &rules.RuleSet{
 
 func init() {
 	// Compile the patterns for all Dutch rules
-	for i := range DutchRuleSet.Rules {
-		_ = DutchRuleSet.Rules[i].CompilePattern()
+	for i := range RuleSet.Rules {
+		_ = RuleSet.Rules[i].CompilePattern()
 	}
 }
