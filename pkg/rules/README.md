@@ -1,6 +1,6 @@
 # CronScribe Rules Documentation
 
-CronScribe translates natural language expressions into cron syntax using rules defined in YAML files. This comprehensive guide explains how to create, customize, and optimize rules for various languages and scheduling patterns.
+CronScribe translates natural language expressions into cron syntax using rules defined in YAML files and a constants-based system for maintainability. This comprehensive guide explains how to create, customize, and optimize rules for various languages and scheduling patterns.
 
 ## Introduction to Cron Syntax
 
@@ -456,6 +456,121 @@ pattern: '(?i)(?:each|every)\s+day\s+at\s+(\d+)'
 - **Missing components**: Test with optional parts omitted
 - **Case variations**: Test with mixed case input
 
+## Constants System
+
+CronScribe uses a constants-based approach to eliminate string literal duplication and increase code maintainability. These constants are defined in the `pkg/rules/dictionaries.go` file and used throughout the codebase.
+
+### Dictionary Name Constants
+
+```go
+const (
+    DictWeekdays  = "weekdays"  // For weekday names (Monday, Tuesday, etc.)
+    DictOrdinals  = "ordinals"  // For ordinal numbers (first, second, etc.)
+    DictTimeAmPm  = "time_ampm" // For AM/PM time indicators
+    DictMonths    = "months"    // For month names (January, February, etc.)
+)
+```
+
+### Variable Name Constants
+
+```go
+const (
+    VarHour     = "hour"     // Hour component
+    VarMinute   = "minute"   // Minute component
+    VarDay      = "day"      // Day of month
+    VarWeekday  = "weekday"  // Day of week
+    VarMonth    = "month"    // Month
+    VarAmPm     = "ampm"     // AM/PM indicator
+    VarOrdinal  = "ordinal"  // Ordinal indicator (first, second, etc.)
+    VarMinutes  = "minutes"  // Plural minutes for intervals
+    VarHours    = "hours"    // Plural hours for intervals
+)
+```
+
+### Time and Special Value Constants
+
+```go
+// Time period values
+const (
+    TimeAm = "am"
+    TimePm = "pm"
+)
+
+// Special values
+const (
+    OrdinalLast = "last"
+)
+```
+
+### Language-Specific Constants
+
+Each language module has its own constants for language-specific terms. For example:
+
+**Dutch (pkg/langs/nl/nl.go):**
+```go
+const (
+    TimeVM = "vm" // voormiddag (morning)
+    TimeNM = "nm" // namiddag (afternoon)
+    
+    OrdinalLaatste = "laatste" // last
+)
+```
+
+**Russian (pkg/langs/ru/ru.go):**
+```go
+const (
+    // Time of day periods
+    TimeUtra    = "утра"    // morning
+    TimeDnya    = "дня"     // afternoon
+    TimeVechera = "вечера"  // evening
+    TimeNochi   = "ночи"    // night
+    
+    // Ordinals with gender variations
+    OrdinalPervyj  = "первый"  // first (masculine)
+    OrdinalPervaya = "первая"  // first (feminine)
+    // ...more Russian constants
+)
+```
+
+### Using Constants in Rule Definitions
+
+When defining rules in Go code, use these constants instead of string literals:
+
+```go
+Rules: []rules.Rule{
+    {
+        Name:    "daily_at_time",
+        Pattern: `(?i)(?:each|every)\s+day\s+at\s+(\d+)(?::(\d+))?\s*(am|pm)?`,
+        Variables: map[string]int{
+            rules.VarHour:   1,
+            rules.VarMinute: 2,
+            rules.VarAmPm:   3,
+        },
+        Dictionaries: map[string]string{
+            rules.VarAmPm: rules.DictTimeAmPm,
+        },
+        Format: fmt.Sprintf("%%minute %%hour * * *"),
+        DefaultValues: map[string]string{
+            rules.VarMinute: "0",
+        },
+        Transformations: map[string][]rules.Transformation{
+            rules.VarHour: {
+                {
+                    Condition: fmt.Sprintf("%s == '%s' && %s < 12", 
+                        rules.VarAmPm, rules.TimePm, rules.VarHour),
+                    Operation: fmt.Sprintf("%s + 12", rules.VarHour),
+                },
+                {
+                    Condition: fmt.Sprintf("%s == '%s' && %s == 12", 
+                        rules.VarAmPm, rules.TimeAm, rules.VarHour),
+                    Operation: "0",
+                },
+            },
+        },
+    },
+}
+```
+
 ## Common Cron Patterns Reference
 
 | Description | Cron Format | Explanation |
@@ -470,6 +585,93 @@ pattern: '(?i)(?:each|every)\s+day\s+at\s+(\d+)'
 | Weekday nearest 15th | `0 0 15W * *` | Run at midnight on the weekday closest to the 15th |
 | Every 5 minutes | `*/5 * * * *` | Run every 5 minutes |
 | Every 2 hours | `0 */2 * * *` | Run every 2 hours, on the hour |
+
+## Extending the Constants System
+
+When extending CronScribe with new features, follow these guidelines to maintain consistency in the constants system:
+
+### Adding New Dictionary Types
+
+If you need to add a new type of dictionary (beyond weekdays, ordinals, etc.):
+
+1. Add a new constant in the dictionary names section in `dictionaries.go`:
+   ```go
+   const (
+       DictWeekdays  = "weekdays"
+       DictOrdinals  = "ordinals"
+       DictTimeAmPm  = "time_ampm"
+       DictMonths    = "months"
+       // Add your new dictionary type
+       DictYourType  = "your_type"
+   )
+   ```
+
+2. Create a corresponding map variable with default values:
+   ```go
+   // YourTypeValues contains standard your_type mappings
+   var YourTypeValues = map[string]string{
+       "key1": "value1",
+       "key2": "value2",
+       // ...
+   }
+   ```
+
+3. Add the new dictionary to the `LoadDefaultRules` function in `rules.go`:
+   ```go
+   Dictionaries: map[string]Dictionary{
+       DictWeekdays:  WeekdayValues,
+       DictOrdinals:  OrdinalValues,
+       DictTimeAmPm:  TimeAmPmValues, 
+       DictMonths:    MonthValues,
+       DictYourType:  YourTypeValues,  // Add your new dictionary
+   },
+   ```
+
+### Adding New Variable Types
+
+If you need to add a new variable type:
+
+1. Add a new constant in the variable names section in `dictionaries.go`:
+   ```go
+   const (
+       VarHour     = "hour"
+       VarMinute   = "minute"
+       // ...
+       // Add your new variable
+       VarYourVar  = "your_var"
+   )
+   ```
+
+2. Use the new variable name constant in rules:
+   ```go
+   Variables: map[string]int{
+       VarHour:   1,
+       VarMinute: 2,
+       VarYourVar: 3,
+   },
+   ```
+
+### Adding Language-Specific Constants
+
+When adding constants specific to a language:
+
+1. Keep them in the language's package (e.g., `pkg/langs/xx/xx.go`)
+2. Follow the naming pattern used in other language packages:
+   ```go
+   const (
+       // Prefix constants with their type (Time, Ordinal, etc.)
+       TimeYourFormat = "value"
+       OrdinalYourType = "value"
+   )
+   ```
+3. Add comments explaining the meaning and usage of each constant
+
+### Constants Naming Convention
+
+- Use PascalCase for constant names
+- Group related constants in a single `const` block
+- Use prefixes to indicate the type of constant (Dict, Var, Time, Ordinal, etc.)
+- Use descriptive names that explain the purpose of the constant
 
 ## Troubleshooting Rules
 

@@ -1,8 +1,8 @@
-package core
+package cronscribe
 
 import (
 	"fmt"
-	R "github.com/flaticols/cronscribe/pkg/core/rules"
+	"github.com/flaticols/cronscribe/pkg/rules"
 	"strconv"
 	"strings"
 )
@@ -10,11 +10,10 @@ import (
 type (
 	VariableMap   map[string]string
 	DictionaryMap map[string]string
-	Dictionaries  map[string]map[string]string
 )
 
 // TranslateRule converts a match to a cron expression according to the rule
-func TranslateRule(rule *R.Rule, match []string, dictionaries map[string]map[string]string) (string, error) {
+func TranslateRule(rule *rules.Rule, match []string, dictionaries map[string]rules.Dictionary) (string, error) {
 	// Extract variables from the match
 	variables := make(map[string]string)
 	for name, index := range rule.Variables {
@@ -32,7 +31,7 @@ func TranslateRule(rule *R.Rule, match []string, dictionaries map[string]map[str
 
 	// Convert string variables to numeric if needed
 	for name, value := range variables {
-		if name == "hour" || name == "minute" || name == "day" {
+		if name == rules.VarHour || name == rules.VarMinute || name == rules.VarDay {
 			if i, err := strconv.Atoi(value); err == nil {
 				variables[name] = strconv.Itoa(i)
 			}
@@ -51,7 +50,7 @@ func TranslateRule(rule *R.Rule, match []string, dictionaries map[string]map[str
 			condition = strings.ReplaceAll(condition, k, fmt.Sprintf("\"%s\"", v))
 		}
 
-		if R.EvalCondition(condition) {
+		if rules.EvalCondition(condition) {
 			format := specialCase.Format
 			return applyFormatWithDictionaries(format, variables, dictionaries, rule.Dictionaries)
 		}
@@ -62,7 +61,7 @@ func TranslateRule(rule *R.Rule, match []string, dictionaries map[string]map[str
 }
 
 // applyFormatWithDictionaries applies a format with variable and dictionary value substitution
-func applyFormatWithDictionaries(format string, variables VariableMap, dictionaries Dictionaries, dictionaryMap DictionaryMap) (string, error) {
+func applyFormatWithDictionaries(format string, variables VariableMap, dictionaries map[string]rules.Dictionary, dictionaryMap DictionaryMap) (string, error) {
 	result := format
 
 	// Replace variables in the format
