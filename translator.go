@@ -39,7 +39,7 @@ func TranslateRule(rule *rules.Rule, match []string, dictionaries map[string]rul
 	}
 
 	// Apply transformations to variables
-	if err := rule.ApplyTransformations(variables, dictionaries); err != nil {
+	if err := rule.ApplyTransformations(variables); err != nil {
 		return "", err
 	}
 

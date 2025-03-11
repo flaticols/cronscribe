@@ -201,7 +201,7 @@ func TestEvalOperation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := evalOperation(tt.operation, tt.currentValue)
+			got, err := evalOperation(tt.operation)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("evalOperation() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -427,7 +427,7 @@ func TestApplyTransformations(t *testing.T) {
 				actualVars[k] = v
 			}
 
-			err := tt.rule.ApplyTransformations(actualVars, tt.dictionaries)
+			err := tt.rule.ApplyTransformations(actualVars)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ApplyTransformations() error = %v, wantErr %v", err, tt.wantErr)
 			}
