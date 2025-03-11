@@ -51,9 +51,9 @@ func (r *Rule) Match(expression string) []string {
 }
 
 // ApplyTransformations applies transformations to variables
-func (r *Rule) ApplyTransformations(variables map[string]string, dictionaries map[string]Dictionary) error {
+func (r *Rule) ApplyTransformations(variables map[string]string) error {
 	for varName, transformations := range r.Transformations {
-		value, exists := variables[varName]
+		_, exists := variables[varName]
 		if !exists {
 			continue
 		}
@@ -76,7 +76,7 @@ func (r *Rule) ApplyTransformations(variables map[string]string, dictionaries ma
 				}
 
 				// Perform the operation
-				result, err := evalOperation(operation, value)
+				result, err := evalOperation(operation)
 				if err != nil {
 					return err
 				}
@@ -119,7 +119,7 @@ func EvalCondition(condition string) bool {
 
 // evalOperation evaluates a simple operation
 // Simplified version for example
-func evalOperation(operation, currentValue string) (string, error) {
+func evalOperation(operation string) (string, error) {
 	if strings.Contains(operation, "+") {
 		parts := strings.Split(operation, "+")
 		left, _ := strconv.Atoi(strings.TrimSpace(parts[0]))
