@@ -106,10 +106,14 @@ var TimeSpecificValuesRU = map[string]string{
 
 // TimePeriodValuesRU contains time period mappings for Russian
 var TimePeriodValuesRU = map[string]string{
-	"утро":  "5-11",  // 5:00 AM to 11:59 AM
-	"день":  "12-17", // 12:00 PM to 5:59 PM
-	"вечер": "18-21", // 6:00 PM to 9:59 PM
-	"ночь":  "22-4",  // 10:00 PM to 4:59 AM
+	"утро":    "5-11",  // 5:00 AM to 11:59 AM
+	"день":    "12-17", // 12:00 PM to 5:59 PM
+	"вечер":   "18-21", // 6:00 PM to 9:59 PM
+	"ночь":    "22-4",  // 10:00 PM to 4:59 AM
+	"утром":   "5-11",  // Instrumental case for "in the morning"
+	"днем":    "12-17", // Instrumental case for "in the afternoon"
+	"вечером": "18-21", // Instrumental case for "in the evening"
+	"ночью":   "22-4",  // Instrumental case for "at night"
 }
 
 // TimeSpecificValuesNL contains time point mappings for Dutch
