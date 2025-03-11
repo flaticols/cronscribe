@@ -3,21 +3,25 @@ package rules
 // Dictionary key constants
 const (
 	// Dictionary names
-	DictWeekdays = "weekdays"
-	DictOrdinals = "ordinals"
-	DictTimeAmPm = "time_ampm"
-	DictMonths   = "months"
+	DictWeekdays     = "weekdays"
+	DictOrdinals     = "ordinals"
+	DictTimeAmPm     = "time_ampm"
+	DictMonths       = "months"
+	DictTimePeriods  = "time_periods"  // For morning, afternoon, etc.
+	DictTimeSpecific = "time_specific" // For noon, midnight, etc.
 
 	// Variable names
-	VarHour    = "hour"
-	VarMinute  = "minute"
-	VarDay     = "day"
-	VarWeekday = "weekday"
-	VarMonth   = "month"
-	VarAmPm    = "ampm"
-	VarOrdinal = "ordinal"
-	VarMinutes = "minutes"
-	VarHours   = "hours"
+	VarHour       = "hour"
+	VarMinute     = "minute"
+	VarDay        = "day"
+	VarWeekday    = "weekday"
+	VarMonth      = "month"
+	VarAmPm       = "ampm"
+	VarOrdinal    = "ordinal"
+	VarMinutes    = "minutes"
+	VarHours      = "hours"
+	VarTimePeriod = "timeperiod" // For time periods (morning, afternoon, etc.)
+	VarTimePoint  = "timepoint"  // For specific time points (noon, midnight)
 
 	// Time period values
 	TimeAm = "am"
@@ -78,4 +82,46 @@ var MonthValues = map[string]string{
 	"october":   "10",
 	"november":  "11",
 	"december":  "12",
+}
+
+// TimeSpecificValues contains standard time point mappings (English)
+var TimeSpecificValues = map[string]string{
+	"midnight": "0",
+	"noon":     "12",
+}
+
+// TimePeriodValues contains standard time period mappings (English)
+var TimePeriodValues = map[string]string{
+	"morning":   "5-11",  // 5:00 AM to 11:59 AM
+	"afternoon": "12-17", // 12:00 PM to 5:59 PM
+	"evening":   "18-21", // 6:00 PM to 9:59 PM
+	"night":     "22-4",  // 10:00 PM to 4:59 AM
+}
+
+// TimeSpecificValuesRU contains time point mappings for Russian
+var TimeSpecificValuesRU = map[string]string{
+	"полночь": "0",
+	"полдень": "12",
+}
+
+// TimePeriodValuesRU contains time period mappings for Russian
+var TimePeriodValuesRU = map[string]string{
+	"утро":  "5-11",  // 5:00 AM to 11:59 AM
+	"день":  "12-17", // 12:00 PM to 5:59 PM
+	"вечер": "18-21", // 6:00 PM to 9:59 PM
+	"ночь":  "22-4",  // 10:00 PM to 4:59 AM
+}
+
+// TimeSpecificValuesNL contains time point mappings for Dutch
+var TimeSpecificValuesNL = map[string]string{
+	"middernacht": "0",
+	"middag":      "12",
+}
+
+// TimePeriodValuesNL contains time period mappings for Dutch
+var TimePeriodValuesNL = map[string]string{
+	"ochtend":  "5-11",  // 5:00 AM to 11:59 AM
+	"namiddag": "12-17", // 12:00 PM to 5:59 PM
+	"avond":    "18-21", // 6:00 PM to 9:59 PM
+	"nacht":    "22-4",  // 10:00 PM to 4:59 AM
 }
