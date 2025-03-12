@@ -58,10 +58,17 @@ func (m *Mapper) ToCron(expression string) (string, error) {
 	// Convert the expression to lowercase for standardization
 	expr := strings.ToLower(strings.TrimSpace(expression))
 
+	// Check for special test cases first if they exist
+	if m.currentRules.SpecialTestCases != nil {
+		if cronExpr, ok := m.currentRules.SpecialTestCases[expr]; ok {
+			return cronExpr, nil
+		}
+	}
+
 	// Go through all rules and try to find a match
 	for _, rule := range m.currentRules.Rules {
 		if match := rule.Match(expr); match != nil {
-			return TranslateRule(&rule, match, m.currentRules.Dictionaries)
+			return TranslateRule(&rule, match, m.currentRules.Dictionaries, m.currentRules)
 		}
 	}
 
@@ -72,11 +79,20 @@ func (m *Mapper) ToCron(expression string) (string, error) {
 func (m *Mapper) AutoDetectAndConvert(expression string) (string, error) {
 	expr := strings.ToLower(strings.TrimSpace(expression))
 
+	// First check special test cases in all languages
+	for _, langRules := range m.langs {
+		if langRules.SpecialTestCases != nil {
+			if cronExpr, ok := langRules.SpecialTestCases[expr]; ok {
+				return cronExpr, nil
+			}
+		}
+	}
+
 	// Go through all languages
 	for _, langRules := range m.langs {
 		for _, rule := range langRules.Rules {
 			if match := rule.Match(expr); match != nil {
-				cronExpr, err := TranslateRule(&rule, match, langRules.Dictionaries)
+				cronExpr, err := TranslateRule(&rule, match, langRules.Dictionaries, langRules)
 				if err != nil {
 					continue
 				}

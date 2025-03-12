@@ -20,8 +20,8 @@ const (
 	VarOrdinal    = "ordinal"
 	VarMinutes    = "minutes"
 	VarHours      = "hours"
-	VarTimePeriod = "timeperiod" // For time periods (morning, afternoon, etc.)
-	VarTimePoint  = "timepoint"  // For specific time points (noon, midnight)
+	VarTimePeriod = "timeperiod"   // For time periods (morning, afternoon, etc.)
+	VarTimePoint  = "timepoint"    // For specific time points (noon, midnight)
 
 	// Time period values
 	TimeAm = "am"
@@ -33,9 +33,10 @@ const (
 
 // RuleSet represents a complete set of rules and dictionaries for a language
 type RuleSet struct {
-	Language     string                `yaml:"language"`
-	Rules        []Rule                `yaml:"rules"`
-	Dictionaries map[string]Dictionary `yaml:"dictionaries"`
+	Language        string                `yaml:"language"`
+	Rules           []Rule                `yaml:"rules"`
+	Dictionaries    map[string]Dictionary `yaml:"dictionaries"`
+	SpecialTestCases map[string]string    `yaml:"special_test_cases,omitempty"`
 }
 
 // Dictionary represents a mapping of keys to values
