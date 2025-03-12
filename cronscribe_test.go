@@ -1,8 +1,12 @@
 package cronscribe
 
 import (
-	"github.com/flaticols/cronscribe/pkg/rules"
+	"slices"
 	"testing"
+
+	"github.com/flaticols/cronscribe/pkg/langs"
+	"github.com/flaticols/cronscribe/pkg/rules"
+	"github.com/stretchr/testify/require"
 )
 
 // Helper function to mock a CronScribe instance with specific rules for testing
@@ -136,20 +140,6 @@ func TestCronScribe_Convert(t *testing.T) {
 			want:       "0 9 * * *",
 			wantErr:    false,
 		},
-		// Skip for simplicity
-		// {
-		//	name:       "Every day at 2:30pm",
-		//	expression: "every day at 2:30pm",
-		//	want:       "30 14 * * *",
-		//	wantErr:    false,
-		// },
-		// Skip for simplicity
-		// {
-		//	name:       "Every Monday",
-		//	expression: "every monday",
-		//	want:       "0 0 * * 1",
-		//	wantErr:    false,
-		// },
 		{
 			name:       "Every last day of month",
 			expression: "every last day of month",
@@ -196,14 +186,53 @@ func TestCronScribe_GetSupportedLanguages(t *testing.T) {
 	}
 
 	// Check that it contains at least English
-	found := false
-	for _, lang := range langs {
-		if lang == "en" {
-			found = true
-			break
-		}
-	}
+	found := slices.Contains(langs, "en")
 	if !found {
 		t.Errorf("GetSupportedLanguages() does not contain 'en'")
+	}
+}
+
+func TestCronScribe_RU(t *testing.T) {
+	cs, err := New()
+	require.NoError(t, err)
+	cs.SetLanguage(langs.LangRU)
+
+	tests := []struct {
+		name       string
+		expression string
+		want       string
+		wantErr    bool
+	}{
+		{
+			name:       "Every day at 19",
+			expression: "каждый день в 19",
+			want:       "0 19 * * *",
+			wantErr:    false,
+		},
+		{
+			name:       "Every day at 19",
+			expression: "каждый день в 13 часов",
+			want:       "0 13 * * *",
+			wantErr:    false,
+		},
+		{
+			name:       "Invalid expression",
+			expression: "some invalid expression",
+			want:       "",
+			wantErr:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			e, err := cs.Convert(tt.expression)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Convert() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && e != tt.want {
+				t.Errorf("Convert() = %v, want %v", e, tt.want)
+			}
+		})
 	}
 }

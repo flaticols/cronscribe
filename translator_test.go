@@ -219,7 +219,7 @@ func TestTranslateRule(t *testing.T) {
 				}
 			}
 
-			got, err := TranslateRule(&tt.rule, tt.match, tt.dictionaries)
+			got, err := TranslateRule(&tt.rule, tt.match, tt.dictionaries, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TranslateRule() error = %v, wantErr %v", err, tt.wantErr)
 				return

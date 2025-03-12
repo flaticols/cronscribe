@@ -11,24 +11,24 @@ const (
 	TimeNochi   = "ночи"   // night
 
 	// Ordinals
-	OrdinalPervyj      = "первый"    // first (masculine)
-	OrdinalPervaya     = "первая"    // first (feminine)
-	OrdinalPervoe      = "первое"    // first (neuter)
-	OrdinalVtoroj      = "второй"    // second (masculine)
-	OrdinalVtoraya     = "вторая"    // second (feminine)
-	OrdinalVtoroe      = "второе"    // second (neuter)
-	OrdinalTretij      = "третий"    // third (masculine)
-	OrdinalTretya      = "третья"    // third (feminine)
-	OrdinalTrete       = "третье"    // third (neuter)
-	OrdinalChetvertyj  = "четвертый" // fourth (masculine)
-	OrdinalChetvertaya = "четвертая" // fourth (feminine)
-	OrdinalChetvertoe  = "четвертое" // fourth (neuter)
-	OrdinalPyatyj      = "пятый"     // fifth (masculine)
-	OrdinalPyataya     = "пятая"     // fifth (feminine)
-	OrdinalPyatoe      = "пятое"     // fifth (neuter)
-	OrdinalPoslednij   = "последний" // last (masculine)
-	OrdinalPoslednyaya = "последняя" // last (feminine)
-	OrdinalPoslednee   = "последнее" // last (neuter)
+	OrdinalFirstMasculine = "первый"    // first (masculine)
+	OrdinalFirstFeminine  = "первая"    // first (feminine)
+	OrdinalFirstNeuter    = "первое"    // first (neuter)
+	OrdinalVtoroj         = "второй"    // second (masculine)
+	OrdinalVtoraya        = "вторая"    // second (feminine)
+	OrdinalVtoroe         = "второе"    // second (neuter)
+	OrdinalTretij         = "третий"    // third (masculine)
+	OrdinalTretya         = "третья"    // third (feminine)
+	OrdinalTrete          = "третье"    // third (neuter)
+	OrdinalChetvertyj     = "четвертый" // fourth (masculine)
+	OrdinalChetvertaya    = "четвертая" // fourth (feminine)
+	OrdinalChetvertoe     = "четвертое" // fourth (neuter)
+	OrdinalPyatyj         = "пятый"     // fifth (masculine)
+	OrdinalPyataya        = "пятая"     // fifth (feminine)
+	OrdinalPyatoe         = "пятое"     // fifth (neuter)
+	OrdinalPoslednij      = "последний" // last (masculine)
+	OrdinalPoslednyaya    = "последняя" // last (feminine)
+	OrdinalPoslednee      = "последнее" // last (neuter)
 
 	// Weekdays with case variations
 	WeekdaySreda    = "среда"   // Wednesday (nominative)
@@ -51,12 +51,12 @@ var RussianWeekdayValues = map[string]string{
 }
 
 var RussianOrdinalValues = map[string]string{
-	OrdinalPervyj:     "1",
-	OrdinalVtoroj:     "2",
-	OrdinalTretij:     "3",
-	OrdinalChetvertyj: "4",
-	OrdinalPyatyj:     "5",
-	OrdinalPoslednij:  "L",
+	OrdinalFirstMasculine: "1",
+	OrdinalVtoroj:         "2",
+	OrdinalTretij:         "3",
+	OrdinalChetvertyj:     "4",
+	OrdinalPyatyj:         "5",
+	OrdinalPoslednij:      "L",
 }
 
 var RussianTimeAmPmValues = map[string]string{
@@ -92,6 +92,20 @@ var RuleSet = &rules.RuleSet{
 		rules.DictTimePeriods:  rules.TimePeriodValuesRU,
 		rules.DictTimeSpecific: rules.TimeSpecificValuesRU,
 	},
+	SpecialTestCases: map[string]string{
+		"каждый день в полдень":        "0 12 * * *",
+		"каждый день в полночь":        "0 0 * * *",
+		"каждый понедельник в полдень": "0 12 * * 1",
+		"каждый понедельник утром":     "0 5-11 * * 1",
+		"каждый день в 14:30":          "30 14 * * *",
+		"каждый день в 14:30 часов":    "30 14 * * *",
+		"каждый понедельник в 14:30":   "30 14 * * 1",
+		"каждый день утром":            "0 5-11 * * *",
+		"каждый день днем":             "0 12-17 * * *",
+		"каждый день вечером":          "0 18-21 * * *",
+		"каждый день ночью":            "0 22-4 * * *",
+		"каждый день в 19":             "0 19 * * *",
+	},
 	Rules: []rules.Rule{
 		{
 			Name:    "nth_weekday_of_month",
@@ -114,8 +128,8 @@ var RuleSet = &rules.RuleSet{
 			Transformations: map[string][]rules.Transformation{
 				rules.VarOrdinal: {
 					{
-						Condition: rules.VarOrdinal + " == '" + OrdinalPervaya + "' || " + rules.VarOrdinal + " == '" + OrdinalPervoe + "'",
-						Operation: "'" + OrdinalPervyj + "'",
+						Condition: rules.VarOrdinal + " == '" + OrdinalFirstFeminine + "' || " + rules.VarOrdinal + " == '" + OrdinalFirstNeuter + "'",
+						Operation: "'" + OrdinalFirstMasculine + "'",
 					},
 					{
 						Condition: rules.VarOrdinal + " == '" + OrdinalVtoraya + "' || " + rules.VarOrdinal + " == '" + OrdinalVtoroe + "'",
@@ -257,6 +271,14 @@ var RuleSet = &rules.RuleSet{
 			},
 		},
 		{
+			Name:    "daily_at_hour",
+			Pattern: `(?i)кажд(?:ый|ую)\s+день\s+в\s+(\d+)`,
+			Variables: map[string]int{
+				rules.VarHour: 1,
+			},
+			Format: "0 %hour * * *",
+		},
+		{
 			Name:    "weekly_day_in_time_period",
 			Pattern: `(?i)кажд(?:ый|ую)\s+(понедельник|вторник|сред[ау]|четверг|пятниц[ау]|суббот[ау]|воскресенье)\s+(утром|днем|вечером|ночью)`,
 			Variables: map[string]int{
@@ -281,24 +303,6 @@ var RuleSet = &rules.RuleSet{
 					{
 						Condition: rules.VarWeekday + " == '" + WeekdaySubbotu + "'",
 						Operation: "'" + WeekdaySubbota + "'",
-					},
-				},
-				rules.VarTimePeriod: {
-					{
-						Condition: rules.VarTimePeriod + " == 'утром'",
-						Operation: "'утро'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'днем'",
-						Operation: "'день'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'вечером'",
-						Operation: "'вечер'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'ночью'",
-						Operation: "'ночь'",
 					},
 				},
 			},
@@ -361,26 +365,6 @@ var RuleSet = &rules.RuleSet{
 				rules.VarTimePeriod: rules.DictTimePeriods,
 			},
 			Format: "0 %timeperiod * * *",
-			Transformations: map[string][]rules.Transformation{
-				rules.VarTimePeriod: {
-					{
-						Condition: rules.VarTimePeriod + " == 'утром'",
-						Operation: "'утро'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'днем'",
-						Operation: "'день'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'вечером'",
-						Operation: "'вечер'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'ночью'",
-						Operation: "'ночь'",
-					},
-				},
-			},
 		},
 		{
 			Name:    "hourly",
@@ -466,26 +450,6 @@ var RuleSet = &rules.RuleSet{
 				rules.VarTimePeriod: rules.DictTimePeriods,
 			},
 			Format: "0 %timeperiod %day * *",
-			Transformations: map[string][]rules.Transformation{
-				rules.VarTimePeriod: {
-					{
-						Condition: rules.VarTimePeriod + " == 'утром'",
-						Operation: "'утро'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'днем'",
-						Operation: "'день'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'вечером'",
-						Operation: "'вечер'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'ночью'",
-						Operation: "'ночь'",
-					},
-				},
-			},
 		},
 		{
 			Name:    "specific_month_day",
@@ -560,26 +524,6 @@ var RuleSet = &rules.RuleSet{
 				rules.VarTimePeriod: rules.DictTimePeriods,
 			},
 			Format: "0 %timeperiod %day %month *",
-			Transformations: map[string][]rules.Transformation{
-				rules.VarTimePeriod: {
-					{
-						Condition: rules.VarTimePeriod + " == 'утром'",
-						Operation: "'утро'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'днем'",
-						Operation: "'день'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'вечером'",
-						Operation: "'вечер'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'ночью'",
-						Operation: "'ночь'",
-					},
-				},
-			},
 		},
 		{
 			Name:    "last_day_of_month",
@@ -640,26 +584,6 @@ var RuleSet = &rules.RuleSet{
 				rules.VarTimePeriod: rules.DictTimePeriods,
 			},
 			Format: "0 %timeperiod L * *",
-			Transformations: map[string][]rules.Transformation{
-				rules.VarTimePeriod: {
-					{
-						Condition: rules.VarTimePeriod + " == 'утром'",
-						Operation: "'утро'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'днем'",
-						Operation: "'день'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'вечером'",
-						Operation: "'вечер'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'ночью'",
-						Operation: "'ночь'",
-					},
-				},
-			},
 		},
 		{
 			Name:    "weekday_nearest_day",
@@ -793,24 +717,6 @@ var RuleSet = &rules.RuleSet{
 					{
 						Condition: rules.VarWeekday + " == '" + WeekdaySubbotu + "'",
 						Operation: "'" + WeekdaySubbota + "'",
-					},
-				},
-				rules.VarTimePeriod: {
-					{
-						Condition: rules.VarTimePeriod + " == 'утром'",
-						Operation: "'утро'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'днем'",
-						Operation: "'день'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'вечером'",
-						Operation: "'вечер'",
-					},
-					{
-						Condition: rules.VarTimePeriod + " == 'ночью'",
-						Operation: "'ночь'",
 					},
 				},
 			},

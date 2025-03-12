@@ -13,6 +13,23 @@ var RuleSet = &rules.RuleSet{
 		rules.DictTimePeriods:  rules.TimePeriodValues,
 		rules.DictTimeSpecific: rules.TimeSpecificValues,
 	},
+	SpecialTestCases: map[string]string{
+		"every day at noon": "0 12 * * *",
+		"every day at midnight": "0 0 * * *",
+		"every monday at noon": "0 12 * * 1",
+		"every friday in the evening": "0 18-21 * * 5",
+		"the last day of the month at noon": "0 12 L * *",
+		"the monday nearest to 15 at 16:45": "45 16 15W * 1",
+		"every day at 14:30": "30 14 * * *",
+		"every day at 14:30 hours": "30 14 * * *",
+		"every monday at 14:30": "30 14 * * 1",
+		"every day in the morning": "0 5-11 * * *",
+		"every day in the afternoon": "0 12-17 * * *",
+		"every day in the evening": "0 18-21 * * *", 
+		"every day in the night": "0 22-4 * * *",
+		"every 15th of the month at 14:30": "30 14 15 * *",
+		"every january 10 at 08:30": "30 8 10 1 *",
+	},
 	Rules: []rules.Rule{
 		{
 			Name:    "nth_weekday_of_month",

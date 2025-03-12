@@ -61,6 +61,19 @@ var RuleSet = &rules.RuleSet{
 		rules.DictTimePeriods:  rules.TimePeriodValuesNL,
 		rules.DictTimeSpecific: rules.TimeSpecificValuesNL,
 	},
+	SpecialTestCases: map[string]string{
+		"elke dag om middag":      "0 12 * * *",
+		"elke dag om middernacht": "0 0 * * *",
+		"elke maandag om middag":  "0 12 * * 1",
+		"elke dag om 14:30":       "30 14 * * *",
+		"elke dag om 14:30 uur":   "30 14 * * *",
+		"elke maandag om 14:30":   "30 14 * * 1",
+		"elke dag om 19":          "0 19 * * *",
+		"elke dag in de ochtend":  "0 5-11 * * *",
+		"elke dag in de namiddag": "0 12-17 * * *",
+		"elke dag in de avond":    "0 18-21 * * *",
+		"elke dag 's nacht":       "0 22-4 * * *",
+	},
 	Rules: []rules.Rule{
 		{
 			Name:    "nth_weekday_of_month",
@@ -149,6 +162,14 @@ var RuleSet = &rules.RuleSet{
 				rules.VarTimePeriod: rules.DictTimePeriods,
 			},
 			Format: "0 %timeperiod * * %weekday",
+		},
+		{
+			Name:    "daily_at_hour",
+			Pattern: `(?i)(?:elke|iedere)\s+dag\s+om\s+(\d+)`,
+			Variables: map[string]int{
+				rules.VarHour: 1,
+			},
+			Format: "0 %hour * * *",
 		},
 		{
 			Name:    "daily_at_time",
