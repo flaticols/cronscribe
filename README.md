@@ -1,5 +1,9 @@
 # CronScribe
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/flaticols/cronscribe.svg)](https://pkg.go.dev/github.com/flaticols/cronscribe)
+[![Go Report Card](https://goreportcard.com/badge/github.com/flaticols/cronscribe)](https://goreportcard.com/report/github.com/flaticols/cronscribe)
+
+
 CronScribe is a Go library that converts human-readable schedule descriptions to cron expressions using a rule-based system with multilingual support.
 
 ## Features
